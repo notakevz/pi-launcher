@@ -125,4 +125,17 @@ npm run test:packaged
 - [ ] 发布说明写明版本、平台、后端兼容性和未验项目。
 - [ ] 为发布文件生成 SHA-256；未签名时说明可能触发 SmartScreen。
 
+## 6. GitHub Actions 手动打包
+
+`.github/workflows/build-windows.yml` 显示为 **Build Windows**，只接受 `workflow_dispatch`，
+不因普通 push、PR 或 tag 自动打包，也不发布 Release。默认分支上有该文件后即可在 Actions 页面手动运行。
+
+- 使用 Windows runner、Node 22 和锁文件 `npm ci`，先运行自包含单测及语法检查。
+- 执行 `npm run dist -- --x64 --publish never`，不构建或安装外置 Pi Web 后端。
+- 仅上传 `dist/*.exe` 与 `dist/SHA256SUMS.txt` 为 `pi-web-launcher-windows-x64` 附件，保留 7 天。
+  不上传整个工作区、依赖、用户配置、后端、调试输出或 `win-unpacked`。
+- 只读仓库权限，不配置模型凭据、个人代理或签名证书；产物为未签名安装包。
+- 不在 CI 中调用真实模型或连接用户服务，不能替代第 4、5 节的实际运行验收。
+- 查看真实运行日志和附件状态后才能报告“打包成功”；只提交工作流不是已产出 EXE。
+
 本项目没有自动发布、上传 Release 或 npm publish 工作流。手动检查通过后再发布。

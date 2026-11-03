@@ -20,7 +20,15 @@
 
 ## 1. 准备启动器
 
-目前仓库提供源码，可以这样运行；如果已经安装了打包客户端，可跳过这一步。
+**下载安装包**：打开 [Build Windows](https://github.com/notakevz/pi-web-launcher/actions/workflows/build-windows.yml)，
+选择一次成功的运行记录，在底部 **Artifacts** 下载 `pi-web-launcher-windows-x64`，
+解压后运行 EXE 安装。下载需登录 GitHub，附件保留 7 天。
+安装包未签名，Windows 可能显示 SmartScreen 提醒。
+
+有仓库写权限的维护者可以点击 **Run workflow**，选择 `main` 手动生成新安装包。
+普通用户不能在原仓库触发构建；没有可用附件时，可请维护者重新构建，或从源码运行。
+
+**也可以从源码运行**：
 
 ```powershell
 git clone https://github.com/notakevz/pi-web-launcher.git
@@ -53,6 +61,7 @@ npm install -g --ignore-scripts @earendil-works/pi-coding-agent
 
 ### B. 使用 notakevz/pi-web（需要 fork 定制时）
 
+此路线需要启动器的构建脚本；即使使用已安装客户端，也请先按第 1 步准备启动器源码。
 在启动器源码目录内执行：
 
 ```powershell

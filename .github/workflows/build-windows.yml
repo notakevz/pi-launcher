@@ -1,0 +1,59 @@
+name: Build Windows
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Package Windows x64
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm run test:unit
+
+      - name: Check JavaScript syntax
+        run: npm run check:syntax
+
+      - name: Build unsigned Windows installer
+        run: npm run dist -- --x64 --publish never
+
+      - name: Generate SHA-256 checksums
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $installers = @(Get-ChildItem -LiteralPath dist -Filter '*.exe' -File)
+          if ($installers.Count -eq 0) { throw 'No Windows installer was generated.' }
+          $checksums = foreach ($installer in $installers) {
+            $hash = (Get-FileHash -LiteralPath $installer.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            '{0}  {1}' -f $hash, $installer.Name
+          }
+          $checksums | Set-Content -LiteralPath dist/SHA256SUMS.txt -Encoding utf8
+
+      - name: Upload installer and checksums
+        uses: actions/upload-artifact@v4
+        with:
+          name: pi-web-launcher-windows-x64
+          path: |
+            dist/*.exe
+            dist/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0

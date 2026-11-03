@@ -16,6 +16,7 @@
 | `config/backend-build.json` | 显式手动构建参数，不参与自动升级 |
 | `scripts/build-source.js` | fork 构建、产物清单和不覆盖式交付 |
 | `scripts/backend-manifest.js` | 手动完整性检查与仓库地址规范化 |
+| `.github/workflows/build-windows.yml` | 手动 Windows x64 打包与临时附件，不发布 Release |
 
 ## 两种后端的边界
 
@@ -76,7 +77,11 @@ GitHub Actions 的 Node/OS 矩阵只覆盖这一层，不是安装包或真实�
 - 产物目录须为新目录；交付失败按错误中的恢复路径核对，不自动删除保留的完整产物或部分输出。
 - 保留 Electron/Chromium/Node 等第三方许可，不因本项目 MIT 而移除依赖通知。
 - 图标为本项目自有图案，`python scripts/generate-icon.py` 仅用于重建 PNG/ICO，需要 Pillow。
-- 没有自动发布、npm publish 或上传安装包的工作流；提交、推送与 Release 按用户授权分别执行。
+- `Build Windows` 仅手动触发：Windows runner 安装依赖、运行自包含检查、生成未签名 x64 NSIS 安装包，
+  只上传 EXE 和 SHA-256 文件为 Actions 附件，保留 7 天。没有后端、个人配置或真实模型测试。
+- 工作流使用只读仓库权限，不需要私有账号密钥；`--publish never` 禁止 electron-builder 隐式发布。
+  构建成功不是 Windows 界面与完整安装/卸载验收通过。
+- 没有自动发布 Release 或 npm publish 工作流；提交、推送与 Release 按用户授权分别执行。
 
 ## 报告与文档维护
 
