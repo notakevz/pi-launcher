@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "backendPath": "C:/pi-web/backend",
+  "cwd": "C:/work",
+  "port": 30141,
+  "nodePath": null,
+  "proxyUrl": null,
+  "noProxy": [],
+  "startupTimeoutMs": 60000
+}

@@ -1,0 +1,56 @@
+{
+  "name": "pi-web-launcher",
+  "version": "0.0.1",
+  "private": true,
+  "license": "MIT",
+  "description": "Windows desktop launcher for an independently built local Pi Web backend.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/notakevz/pi-web-launcher.git"
+  },
+  "homepage": "https://github.com/notakevz/pi-web-launcher#readme",
+  "bugs": {
+    "url": "https://github.com/notakevz/pi-web-launcher/issues"
+  },
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "npm run test:unit",
+    "test:unit": "node --test scripts/test-local-backend.js scripts/test-config-unit.js scripts/test-main-unit.js",
+    "test:integration": "node scripts/test-integration.js",
+    "check:syntax": "node --check src/main.js && node --check src/backend.js && node --check src/local-backend.js && node --check scripts/build-source.js",
+    "backend:check": "node scripts/prepare-backend.js",
+    "test:packaged": "node scripts/test-packaged-exe.js",
+    "test:loading": "electron scripts/test-loading-electron.js",
+    "test:subagent": "node --test scripts/test-subagent-policy.mjs && node scripts/test-subagent-runtime.mjs",
+    "build:source": "node scripts/build-source.js",
+    "test:source-web": "node scripts/test-source-web.js",
+    "icons": "python scripts/generate-icon.py",
+    "dist": "electron-builder --win nsis"
+  },
+  "devDependencies": {
+    "electron": "42.3.3",
+    "electron-builder": "26.15.2"
+  },
+  "allowScripts": { "electron": true, "app-builder-bin": true },
+  "build": {
+    "appId": "local.pi.agent.launcher",
+    "productName": "Pi Launcher",
+    "directories": { "output": "dist" },
+    "files": ["src/main.js", "src/backend.js", "src/local-backend.js", "src/process-tools.js", "assets/**/*", "config/launcher-defaults.json", "config/launcher-config.example.json", "LICENSE", "THIRD_PARTY_NOTICES.md", "package.json"],
+    "win": { "icon": "assets/icon.ico", "target": "nsis" },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Pi Launcher",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico"
+    }
+  }
+}

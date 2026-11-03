@@ -1,0 +1,7 @@
+{
+  "repository": "https://github.com/notakevz/pi-web.git",
+  "source": "../pi-web",
+  "output": "release/backend",
+  "commit": "HEAD",
+  "testScope": "windows-core"
+}

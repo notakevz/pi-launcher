@@ -1,0 +1,27 @@
+node_modules/
+dist/
+.build/
+release/
+.pi-backend-delivery-*/
+coverage/
+*.log
+*.log.*
+__pycache__/
+
+# Local runtime configuration and credentials; commit examples only.
+/launcher-config.json
+/config/launcher-config.json
+/build-config.json
+*.local.json
+.env
+.env.*
+!.env.example
+auth.json
+models.json
+mcp.json
+/pi-web-*.json
+/pi-web-*.json.*.tmp
+
+.DS_Store
+Thumbs.db
+.@__thumb/

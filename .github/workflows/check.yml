@@ -1,0 +1,27 @@
+name: Unit checks
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node: [22, 24]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      # Unit tests use only Node built-ins; no Electron download or backend is needed.
+      - run: npm run test:unit
+      - run: node --check src/main.js
+      - run: node --check scripts/build-source.js
