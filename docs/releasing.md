@@ -127,17 +127,42 @@ npm run test:packaged
 - [ ] 发布说明写明版本、平台、后端兼容性和未验项目。
 - [ ] 为发布文件生成 SHA-256；未签名时说明可能触发 SmartScreen。
 
-## 6. GitHub Actions 手动打包
+## 6. GitHub Actions 手动打包与可选发布
 
-`.github/workflows/build-windows.yml` 显示为 **Build Windows**，只接受 `workflow_dispatch`，
-不因普通 push、PR 或 tag 自动打包，也不发布 Release。默认分支上有该文件后即可在 Actions 页面手动运行。
+`.github/workflows/build-windows.yml` 显示为 **Build Windows**，只接受 `workflow_dispatch`。
+普通 push、PR、tag 不触发打包或发布，也没有 npm publish 工作流。
+有仓库写权限的维护者在 **Run workflow** 选择 `main`；`publish_release` 勾选项默认关闭。
 
+### 仅打包（默认）
+
+- 构建 job 只有 `contents: read`，检出本次运行的固定 SHA，不跟随移动的分支头。
 - 使用 Windows runner、Node 22 和锁文件 `npm ci`，先运行自包含单测及语法检查。
 - 执行 `npm run dist -- --x64 --publish never`，不构建或安装外置 Pi Web 后端。
+  NSIS 安装包使用无空格 ASCII 文件名，如 `pi-web-launcher-0.0.1-x64-setup.exe`，产品显示名不变。
 - 仅上传 `dist/*.exe` 与 `dist/SHA256SUMS.txt` 为 `pi-web-launcher-windows-x64` 附件，保留 7 天。
   不上传整个工作区、依赖、用户配置、后端、调试输出或 `win-unpacked`。
-- 只读仓库权限，不配置模型凭据、个人代理或签名证书；产物为未签名安装包。
+- 不配置模型凭据、个人代理或签名证书；产物为未签名安装包。
 - 不在 CI 中调用真实模型或连接用户服务，不能替代第 4、5 节的实际运行验收。
-- 查看真实运行日志和附件状态后才能报告“打包成功”；只提交工作流不是已产出 EXE。
 
-本项目没有自动发布、上传 Release 或 npm publish 工作流。手动检查通过后再发布。
+### 勾选发布到 Release
+
+勾选 **Publish to GitHub Release (create version tag)** 后，只有构建成功才执行独立发布 job：
+
+1. 使用 Ubuntu runner，只有该 job 申请 `contents: write`，使用内置 `GITHUB_TOKEN`，不需要个人 PAT。
+   仓库或组织策略若拒绝写权限，发布会失败；不要绕过权限限制。
+2. 检出与构建相同的 SHA，下载**本次运行**的附件；不重新打包，也不通过维护者电脑中转。
+   发布脚本拒绝白名单以外的文件、符号链接及可能被 GitHub 改写的文件名，并核对 EXE 与 SHA-256 清单。
+3. 从该 commit 的 `package.json` 读取版本，生成如 `v0.0.1` 的标签。
+   完整分页检查所有 Release（包括草稿），已有同名标签（即使指向相同 commit）或 Release 时停止。
+   查询失败不当作不存在，不覆盖、不复用。
+4. 原子创建指向该 SHA 的标签，再创建草稿 Release，上传 EXE 和校验文件。
+   每个上传响应的文件名须与校验清单一致，全部成功才公开发布。
+   版本中的 prerelease 标记会对应 GitHub 的预发布状态。
+5. 发布任务的摘要给出 Release 链接。公开 Release 的附件不受 Actions 的 7 天期限限制。
+
+同一仓库的发布 job 串行执行，标签创建仍以 GitHub 的原子检查为准。
+若创建标签后发生上传或发布失败，标签/草稿可能保留；先人工检查，不自动删除或覆盖后重跑。
+使用新版本重新发布，或另行获得维护者批准后再处理未完成的标签/草稿。
+
+查看真实运行日志和附件状态后才能报告“打包/发布成功”；提交工作流不是已产出 EXE，
+发布成功也不能替代第 4、5 节的 Windows 实际运行验收。

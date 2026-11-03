@@ -20,13 +20,19 @@
 
 ## 1. 准备启动器
 
-**下载安装包**：打开 [Build Windows](https://github.com/notakevz/pi-web-launcher/actions/workflows/build-windows.yml)，
-选择一次成功的运行记录，在底部 **Artifacts** 下载 `pi-web-launcher-windows-x64`，
-解压后运行 EXE 安装。下载需登录 GitHub，附件保留 7 天。
+**下载安装包**：打开 [Releases](https://github.com/notakevz/pi-web-launcher/releases)，
+在已发布版本的 **Assets** 中下载 EXE 并安装，不要把 Source code 压缩包当作安装包。
+Release 附件无需登录 GitHub，也不受 Actions 附件 7 天期限限制。
 安装包未签名，Windows 可能显示 SmartScreen 提醒。
 
-有仓库写权限的维护者可以点击 **Run workflow**，选择 `main` 手动生成新安装包。
-普通用户不能在原仓库触发构建；没有可用附件时，可请维护者重新构建，或从源码运行。
+**临时构建附件**：也可打开 [Build Windows](https://github.com/notakevz/pi-web-launcher/actions/workflows/build-windows.yml)，
+选择一次成功的运行记录，在底部 **Artifacts** 下载 `pi-web-launcher-windows-x64`，解压后取得 EXE。
+这类附件下载需登录 GitHub，保留 7 天。
+
+有仓库写权限的维护者可以点击 **Run workflow**，选择 `main` 手动打包；
+勾选 **Publish to GitHub Release (create version tag)** 才会同时发布到 Releases，默认不勾选。
+版本号来自 `package.json`，已有同名标签或 Release 时不会覆盖。
+普通用户不能在原仓库触发构建；尚无可用安装包时，可请维护者发布，或从源码运行。
 
 **也可以从源码运行**：
 

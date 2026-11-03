@@ -2,6 +2,12 @@ name: Build Windows
 
 on:
   workflow_dispatch:
+    inputs:
+      publish_release:
+        description: Publish to GitHub Release (create version tag)
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
@@ -16,6 +22,9 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -57,3 +66,42 @@ jobs:
           if-no-files-found: error
           retention-days: 7
           compression-level: 0
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    if: ${{ inputs.publish_release }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    concurrency:
+      group: pi-web-launcher-release
+      cancel-in-progress: false
+    steps:
+      - name: Check out the built source commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Download this run's installer and checksums
+        uses: actions/download-artifact@v4
+        with:
+          name: pi-web-launcher-windows-x64
+          path: dist
+
+      - name: Publish a new version without overwriting existing releases
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { publishRelease } = require('./scripts/publish-release.js')
+            const release = await publishRelease({
+              github, context, core,
+              directory: require('node:path').resolve('dist'),
+              version: require('./package.json').version,
+            })
+            await core.summary
+              .addHeading('Release published')
+              .addLink('Download Pi Web Launcher', release.html_url)
+              .write()

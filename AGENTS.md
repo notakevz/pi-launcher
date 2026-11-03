@@ -37,7 +37,8 @@
 9. **模型与扩展分开配置。** 模型凭据由 Pi Web/Pi 管理，不放到启动器 JSON。
    用户需要额外扩展时，先确认来源和后端兼容性，不复制未知代码或绕过权限策略。
 10. **交付简明记录。** 告知实际安装/后端/配置/日志目录、版本、代理配置位置、运行结果及未验项目；
-    不输出密钥或完整认证代理 URL。只有用户需要安装包时才打包，不自行发布 Release。
+    不输出密钥或完整认证代理 URL。只有用户需要安装包时才打包，不自行触发 Release 发布。
+    `Build Windows` 默认只生成附件；维护者手动勾选发布选项才允许创建标签与 Release，不覆盖已有版本。
 
 ## Architecture and change boundaries
 
@@ -51,6 +52,8 @@
 - Launcher-specific environment variables use only `PI_WEB_LAUNCHER_`. Do not log proxy credentials or model secrets.
 - Never commit credentials, sessions, logs, backend artifacts, thumbnail caches or real user configuration.
 - Only stop a backend whose process identity and ownership have been verified; never stop external services by guessing.
+- Release publishing is opt-in on manual builds only. Keep build permissions read-only and restrict `contents: write` to the conditional release job.
+- Bind release assets and tags to the built commit, verify checksums, and fail on existing tags/releases. Never silently overwrite or delete them.
 - Use the existing minimal CommonJS style. Avoid unrelated formatting, refactors and feature expansion.
 
 ## Verification rules

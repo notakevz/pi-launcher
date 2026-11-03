@@ -16,7 +16,8 @@
 | `config/backend-build.json` | 显式手动构建参数，不参与自动升级 |
 | `scripts/build-source.js` | fork 构建、产物清单和不覆盖式交付 |
 | `scripts/backend-manifest.js` | 手动完整性检查与仓库地址规范化 |
-| `.github/workflows/build-windows.yml` | 手动 Windows x64 打包与临时附件，不发布 Release |
+| `.github/workflows/build-windows.yml` | 手动 Windows x64 打包、临时附件及勾选后才执行的 Release 发布 |
+| `scripts/publish-release.js` | 校验附件、拒绝已有版本、创建标签与草稿并在上传完成后发布 |
 
 ## 产品命名
 
@@ -55,6 +56,7 @@ GitHub Actions 的 Node/OS 矩阵只覆盖这一层，不是安装包或真实�
 - `scripts/test-local-backend.js`
 - `scripts/test-config-unit.js`
 - `scripts/test-main-unit.js`
+- `scripts/test-release-unit.js`（临时附件与 mock GitHub API，不连接实际仓库）
 
 配置或错误消息测试可能故意触发错误日志，以测试断言和最终退出码判断，不能仅看到
 “Fatal error”字样就宣称失败，也不能忽略真正的非零退出码。
@@ -86,9 +88,15 @@ GitHub Actions 的 Node/OS 矩阵只覆盖这一层，不是安装包或真实�
 - 图标为本项目自有图案，`python scripts/generate-icon.py` 仅用于重建 PNG/ICO，需要 Pillow。
 - `Build Windows` 仅手动触发：Windows runner 安装依赖、运行自包含检查、生成未签名 x64 NSIS 安装包，
   只上传 EXE 和 SHA-256 文件为 Actions 附件，保留 7 天。没有后端、个人配置或真实模型测试。
-- 工作流使用只读仓库权限，不需要私有账号密钥；`--publish never` 禁止 electron-builder 隐式发布。
-  构建成功不是 Windows 界面与完整安装/卸载验收通过。
-- 没有自动发布 Release 或 npm publish 工作流；提交、推送与 Release 按用户授权分别执行。
+- 构建 job 保持只读权限；`--publish never` 禁止 electron-builder 隐式发布。
+  仅在维护者手动勾选 `publish_release` 时，独立发布 job 才使用 `contents: write` 与内置 `GITHUB_TOKEN`。
+  发布 job 检出相同 SHA，下载本次运行的附件，校验白名单和 SHA-256；不用个人 PAT 或模型凭据。
+- 标签为 `v` 加 `package.json` 的版本号，指向被构建的 commit；完整分页检查包含草稿的 Release，
+  已有标签或 Release 就停止，查询失败即停止，不复用或覆盖。安装包文件名固定为无空格 ASCII 格式，
+  上传响应的实际文件名必须保持一致，防止 GitHub 重命名后校验清单失效。
+  新建草稿后上传 EXE/校验文件，全部成功才公开；失败保留标签/草稿供人工检查，不自动删除或重试覆盖。
+- 普通 push、PR、tag 不自动发布，也没有 npm publish；提交、推送与手动发布按用户授权分别执行。
+  构建或发布成功都不是 Windows 界面与完整安装/卸载验收通过。
 
 ## 报告与文档维护
 

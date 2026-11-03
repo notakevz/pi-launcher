@@ -19,7 +19,7 @@
   "scripts": {
     "start": "electron .",
     "test": "npm run test:unit",
-    "test:unit": "node --test scripts/test-local-backend.js scripts/test-config-unit.js scripts/test-main-unit.js",
+    "test:unit": "node --test scripts/test-local-backend.js scripts/test-config-unit.js scripts/test-main-unit.js scripts/test-release-unit.js",
     "test:integration": "node scripts/test-integration.js",
     "check:syntax": "node --check src/main.js && node --check src/backend.js && node --check src/local-backend.js && node --check scripts/build-source.js",
     "backend:check": "node scripts/prepare-backend.js",
@@ -43,6 +43,7 @@
     "files": ["src/main.js", "src/backend.js", "src/local-backend.js", "src/process-tools.js", "assets/**/*", "config/launcher-defaults.json", "config/launcher-config.example.json", "LICENSE", "THIRD_PARTY_NOTICES.md", "package.json"],
     "win": { "icon": "assets/icon.ico", "target": "nsis" },
     "nsis": {
+      "artifactName": "pi-web-launcher-${version}-${arch}-setup.${ext}",
       "oneClick": false,
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,

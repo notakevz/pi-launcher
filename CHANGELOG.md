@@ -8,5 +8,6 @@
 - Separate self-contained unit tests from optional Windows/backend integration tests.
 - Replace the upstream official logo with original project artwork.
 - Document manual backend builds, configuration, verification and release boundaries.
+- Offer manual Windows x64 builds with opt-in GitHub Release publishing, checksum verification and no overwriting of existing versions.
 
 This list describes source preparation, not a newly validated Windows binary release.
