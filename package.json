@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "license": "MIT",
-  "description": "Windows desktop launcher for an independently built local Pi Web backend.",
+  "description": "Windows desktop launcher for an npm-installed or locally built Pi Web backend.",
   "repository": {
     "type": "git",
     "url": "https://github.com/notakevz/pi-web-launcher.git"

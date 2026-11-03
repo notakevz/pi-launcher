@@ -1,4 +1,7 @@
-# Windows 构建与发布清单
+# Windows 构建与发布清单（AI 维护）
+
+本文供 AI 和贡献者执行构建、测试与发布维护，入口见 [AI 维护说明](ai-maintenance.md)。
+普通用户安装和使用请读 [README](../README.md)，不需要逐项执行此清单。
 
 本文区分可复现的源码检查与实际 Windows 发布验收。不要把旧机器上的历史测试
 记录、Node 单元测试或静态检查写成新安装包已经通过验收。
@@ -17,7 +20,7 @@
 - [ ] 实际用户配置、凭据、日志、会话、后端构建、Electron 安装包未进入 Git。
 - [ ] README 不含个人路径、代理账号密码、机器专属部署历史。
 - [ ] `npm run test:unit` 通过；GitHub Actions 的 Windows/Linux 单元检查通过。
-- [ ] README 中的配置字段与 `config/launcher-defaults.json` 一致。
+- [ ] 用户配置指南与 `config/launcher-defaults.json` 一致，README 的 npm/fork 路线均可按步骤操作。
 - [ ] 检查 fork 兼容性；记录实际验收的后端 commit 和 Node/Windows 版本。
 
 ## 2. 准备 Windows 环境

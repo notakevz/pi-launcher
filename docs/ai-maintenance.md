@@ -1,0 +1,88 @@
+# AI 维护说明：实现、测试和验证
+
+本文面向修改或维护本项目的 AI 和贡献者。用户如何安装、选择后端和使用应用，
+统一放在 [README](../README.md)；不要向 README 追加测试清单、内部证据或机器部署历史。
+开始任务前先读根 [AGENTS.md](../AGENTS.md)。
+
+## 实现入口
+
+| 文件 | 职责 |
+| --- | --- |
+| `src/main.js` | Electron 窗口、托盘、单实例、启动与退出 |
+| `src/backend.js` | 外置 Node、环境代理、服务就绪、进程记录与自有进程清理 |
+| `src/local-backend.js` | JSON 配置、后端身份/产物与依赖检查 |
+| `src/process-tools.js` | Windows PowerShell/CIM 查询与按身份终止进程树 |
+| `config/launcher-defaults.json` | 打包时的通用运行默认值 |
+| `config/backend-build.json` | 显式手动构建参数，不参与自动升级 |
+| `scripts/build-source.js` | fork 构建、产物清单和不覆盖式交付 |
+| `scripts/backend-manifest.js` | 手动完整性检查与仓库地址规范化 |
+
+## 两种后端的边界
+
+- **npm 发布版**：安装后已有 `bin/pi-web.js` 和 `.next/BUILD_ID`，不需要用户再构建 Next.js。
+  `backendPath` 应由 `npm root -g` 得到模块目录后追加 `@agegr/pi-web`。
+- **fork 构建版**：使用本项目的显式构建命令，产物带生产依赖及 `source-release.json`。
+  npm 版没有该清单是正常情况，不能因此拒绝启动。
+- 依赖检查必须从**后端位置**出发，兼容私有和合法提升布局；不要因启动器自身能解析某包
+  就认定后端完整。SDK 的 `exports` 未必导出 `package.json`，检查不能依赖这个子路径被导出。
+- 启动器不是 Pi SDK 的第二套安装器。不要为了文档方便新增自动下载、隐式 npm/npx 或后端切换。
+- fork 的工具模式、扩展和 API 回归不能当成 npm 上游具有相同功能的证据。
+
+## 自包含检查
+
+在启动器项目根目录执行：
+
+```sh
+npm run test:unit
+npm run check:syntax
+```
+
+`npm test` 默认也只执行自包含单测。此类测试使用 Node 内置模块，不需要安装 Electron、
+真实后端、模型账号或用户 home 中的扩展，可在 Linux 和 Windows 上运行。
+GitHub Actions 的 Node/OS 矩阵只覆盖这一层，不是安装包或真实模型验收。
+
+修改配置与目录检查时，至少覆盖优先级、非法输入、秘密不回显、npm/fork 布局、缺文件、
+可选构建清单、外部服务复用、进程身份及失败清理。测试文件为：
+
+- `scripts/test-local-backend.js`
+- `scripts/test-config-unit.js`
+- `scripts/test-main-unit.js`
+
+配置或错误消息测试可能故意触发错误日志，以测试断言和最终退出码判断，不能仅看到
+“Fatal error”字样就宣称失败，也不能忽略真正的非零退出码。
+
+## Windows 和 Electron 检查
+
+先按 [Windows 构建/发布清单](releasing.md) 准备明确的后端目录和隔离环境。
+
+| 命令 | 作用与前置条件 |
+| --- | --- |
+| `npm run test:integration` | Windows 原生后端启停和窗口控制集成；需要显式外置后端 |
+| `npm run test:source-web` | fork API、模式与实际 Electron；需要对应 fork 构建和完整依赖 |
+| `npm run test:loading` | 真实 Electron 的本地启动页；需要桌面环境，不需要真实模型 |
+| `npm run test:packaged` | 实际 Windows EXE；需要先打包并准备后端 |
+| `npm run test:subagent` | 可选的外部子代理适配测试，输入与准备方式见发布清单 |
+| `npm run backend:check` | 根据用户运行配置诊断 Node 与后端 |
+| `npm run backend:check -- --verify` | 对带构建清单的产物执行显式完整性校验 |
+
+集成脚本不能默认读取真实用户扩展和会话。用户 JSON 的存在不替代集成测试要求的显式
+`PI_AGENT_LAUNCHER_BACKEND_PATH` 等输入。缺少前置条件就说明未运行，不虚报通过。
+纯启动器维护不需要运行可选子代理测试，不要索取或复制用户的全部 agent 目录。
+
+## 构建与发布
+
+- 用户需要自行构建启动器时可以使用 `npm run dist`；AI 发布前的具体检查放在
+  [releasing.md](releasing.md)，不是 README。
+- 产物目录须为新目录；交付失败按错误中的恢复路径核对，不自动删除保留的完整产物或部分输出。
+- 保留 Electron/Chromium/Node 等第三方许可，不因本项目 MIT 而移除依赖通知。
+- 图标为本项目自有图案，`python scripts/generate-icon.py` 仅用于重建 PNG/ICO，需要 Pillow。
+- 没有自动发布、npm publish 或上传安装包的工作流；提交、推送与 Release 按用户授权分别执行。
+
+## 报告与文档维护
+
+- 原始客户端的 Windows 使用基线见 [releasing.md](releasing.md#已有验证基线)。
+  只描述明确得到的确认，不推断用户测试过全部新代码或所有流程。
+- 区分：静态检查、自包含测试、模拟依赖布局、真实 npm 安装、Windows GUI 与安装包验证。
+- 对 npm 包的公开源码或 tarball 检查不是 Windows 安装实测；Node fixture 通过也不是模型认证成功。
+- 只记录任务相关结果；不把用户名、真实路径、代理账号、凭据、会话或工作日志写进公开文档。
+- 用户配置指南说明字段与示例；README 只保留完成使用所需的步骤，避免重复详细表格。

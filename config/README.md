@@ -18,15 +18,17 @@
 
 ## 第一次配置
 
-1. 准备好 Windows 原生 Node.js >=22.19 和已构建完整的 Pi Web 后端。
+1. 准备好 Windows 原生 Node.js >=22.19，以及通过 npm 安装或自己构建的 Pi Web 后端。
 2. 将示例复制为上表中的实际配置文件，或手动新建该文件。
-3. 修改路径、代理等设置，保存为 UTF-8 标准 JSON。
+3. 修改路径、代理等设置，保存为 UTF-8（无 BOM）的标准 JSON。
 4. 启动应用；之后修改配置，须从托盘退出并重新启动才会生效。
 
 **以下 PowerShell 在启动器源码根目录执行，不覆盖已有配置：**
 
 ```powershell
-$configDir = Join-Path $env:APPDATA 'Pi Agent Launcher'
+$configDir = if ($env:PI_AGENT_LAUNCHER_DATA_DIR) {
+    [IO.Path]::GetFullPath($env:PI_AGENT_LAUNCHER_DATA_DIR)
+} else { Join-Path $env:APPDATA 'Pi Agent Launcher' }
 $configFile = Join-Path $configDir 'launcher-config.json'
 New-Item -ItemType Directory -Force -Path $configDir | Out-Null
 if (Test-Path -LiteralPath $configFile) {
@@ -37,7 +39,7 @@ if (Test-Path -LiteralPath $configFile) {
 notepad $configFile
 ```
 
-如果设置了自定义数据目录，须相应调整 `$configDir`。安装包用户也可以直接用文本编辑器
+上述命令会优先使用自定义数据目录；环境变量建议填写绝对路径。安装包用户也可以直接用文本编辑器
 在实际配置目录新建文件，不需要把个人配置写进程序安装目录。
 
 ## 字段说明
@@ -48,7 +50,7 @@ notepad $configFile
 | 字段 | 类型 | 默认值与说明 |
 | --- | --- | --- |
 | `schemaVersion` | 整数 | `1`，配置格式版本；不需要自行递增 |
-| `backendPath` | 字符串或 `null` | 默认 `null`。要启动本地后端时，填构建后运行目录的绝对路径，不是 Git 源码目录或 `bin/pi-web.js` 文件路径 |
+| `backendPath` | 字符串或 `null` | 默认 `null`。填 npm 安装的 Pi Web 包根目录，或自己构建的运行产物目录的绝对路径；不是 Git 源码目录或 CLI 文件路径 |
 | `cwd` | 字符串或 `null` | 默认 `null`，使用当前用户主目录。指定时必须是已存在目录的绝对路径 |
 | `port` | 整数 | 默认 `30141`，范围 `1–65535`，不要写成字符串。只监听回环地址 |
 | `nodePath` | 字符串或 `null` | 默认 `null`，自动查找 Windows Node。指定时填写已存在的 `node.exe` 绝对路径，不是 Node 安装目录 |
@@ -60,7 +62,8 @@ notepad $configFile
 
 - 所有显式路径必须为绝对路径，不支持把 `%USERPROFILE%`、`$HOME` 或 `~` 写入 JSON 后自动展开。
 - 推荐使用 `C:/work`；如果用反斜杠，应写成 `"C:\\work"`。
-- `backendPath` 对应目录应有 `package.json`、`bin/pi-web.js`、`.next` 和生产 `node_modules`。
+- `backendPath` 对应目录应有 `package.json`、`bin/pi-web.js`、`.next/BUILD_ID`，并能找到已安装的运行依赖。
+- npm 版的位置可以在 PowerShell 用 `Join-Path ((npm root -g).Trim()) '@agegr/pi-web'` 得到，不能直接填全局 npm root。
 - 使用本项目构建工具时，填写产物 `release/backend` 或新输出目录的实际绝对路径。
 - 未配置本地后端时不会自动下载；若端口上已有可识别的健康 Pi Web 服务，可以直接复用。
 
@@ -140,8 +143,8 @@ Electron 访问本地后端始终直连。某些扩展有独立网络设置，�
 
 `backend-build.json` 中的 `repository`、`source`、`output`、`commit`、`testScope`
 用于显式的手动构建。默认 source/output 相对于启动器项目根目录，CLI 参数可以覆盖。
-应用启动时不会读取它来自动拉取或升级后端；构建过程见
-[发布清单](../docs/releasing.md)。
+应用启动时不会读取它来自动拉取或升级后端；使用步骤见
+[README 的 fork 构建路线](../README.md#b-使用-notakevzpi-web需要-fork-定制时)。
 
 个人 JSON 不应包含模型 API Key；模型认证由 Pi Web/Pi 管理。
 不要公开实际代理凭据、用户配置、会话或日志。退出启动器会停止它拥有的后端，

@@ -2,6 +2,7 @@
 const fs = require("node:fs")
 const path = require("node:path")
 const os = require("node:os")
+const { createRequire } = require("node:module")
 const defaults = require("../config/launcher-defaults.json")
 
 function validateProxyUrl(value) {
@@ -48,7 +49,7 @@ async function readLauncherConfig(stateDir, env = process.env, { home = os.homed
 }
 
 function requireBackendPath(root) {
-  if (!root) throw new Error("未配置 backendPath。请先手动构建后端，再设置 launcher-config.json 的 backendPath 或 PI_AGENT_LAUNCHER_BACKEND_PATH。启动器不会自动下载。")
+  if (!root) throw new Error("未配置 backendPath。请将 launcher-config.json 的 backendPath 或 PI_AGENT_LAUNCHER_BACKEND_PATH 设置为 Pi Web 的 npm 安装目录或本地构建产物目录。启动器不会自动下载。")
   return root
 }
 
@@ -58,10 +59,26 @@ async function backendPath(stateDir, env = process.env) {
 
 async function inspectBackend(root) {
   try {
-    const pkg = JSON.parse(await fs.promises.readFile(path.join(root, "package.json"), "utf8"))
+    const packageFile = await fs.promises.realpath(path.join(root, "package.json"))
+    const pkg = JSON.parse(await fs.promises.readFile(packageFile, "utf8"))
     if (pkg.name !== "@agegr/pi-web" || typeof pkg.version !== "string") throw new Error("不是 Pi Web 后端目录")
-    for (const relative of ["bin/pi-web.js", ".next/BUILD_ID", "node_modules/next/package.json", "node_modules/@earendil-works/pi-coding-agent/package.json"]) {
+    for (const relative of ["bin/pi-web.js", ".next/BUILD_ID"]) {
       if (!(await fs.promises.stat(path.join(root, relative))).isFile()) throw new Error(`缺少文件 ${relative}`)
+    }
+    // Match Node's lookup from the real backend, not the launcher's dependencies.
+    // Read metadata directly: the SDK does not export its package.json subpath.
+    const backendRequire = createRequire(packageFile)
+    for (const name of ["next", "@earendil-works/pi-coding-agent"]) {
+      let found = false
+      for (const modules of backendRequire.resolve.paths(name)) {
+        let dependency
+        try { dependency = JSON.parse(await fs.promises.readFile(path.join(modules, name, "package.json"), "utf8")) }
+        catch (error) { if (["ENOENT", "ENOTDIR"].includes(error.code)) continue; throw error }
+        if (dependency?.name !== name) throw new Error(`依赖 ${name} 的 package.json 名称不匹配`)
+        found = true
+        break
+      }
+      if (!found) throw new Error(`后端模块搜索路径中缺少依赖 ${name}`)
     }
     let commit
     try {
@@ -71,7 +88,7 @@ async function inspectBackend(root) {
     return { root, entry: path.join(root, "bin", "pi-web.js"), version: pkg.version, commit,
       label: `${pkg.version}${commit ? ` @ ${commit.slice(0, 12)}` : ""}` }
   } catch (error) {
-    throw new Error(`本地 Pi Web 后端未构建完整：${root}\n${error.message}\n请手动构建后端，或设置 PI_AGENT_LAUNCHER_BACKEND_PATH / launcher-config.json 的 backendPath。启动器不会自动下载或修复。`)
+    throw new Error(`本地 Pi Web 后端不完整或无效：${root}\n${error.message}\n请检查 npm 安装目录或本地构建产物，并设置 PI_AGENT_LAUNCHER_BACKEND_PATH / launcher-config.json 的 backendPath。启动器不会自动下载或修复。`)
   }
 }
 
