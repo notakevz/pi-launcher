@@ -22,8 +22,8 @@
 4. **网络按本机实际情况配置。** 检查已有代理配置，不能确定时询问用户；不要猜测端口，
    不关闭 TLS 校验。安装/构建终端的网络和应用运行时的 JSON 代理设置是两件事。
    后端回环访问直连。应用配置不会修改 Windows 系统代理，也不会改变外部已运行服务的环境。
-5. **个人设置写用户 JSON。** 配置路径为 `%APPDATA%\Pi Agent Launcher\launcher-config.json`；
-   若设置 `PI_AGENT_LAUNCHER_DATA_DIR` 则用该目录。不要把本机路径、凭据或代理账号写进源码默认值。
+5. **个人设置写用户 JSON。** 配置路径为 `%APPDATA%\Pi Web Launcher\launcher-config.json`；
+   若设置 `PI_WEB_LAUNCHER_DATA_DIR` 则用该目录。不要把本机路径、凭据或代理账号写进源码默认值。
    使用 UTF-8 无 BOM 写入标准 JSON；已有文件先读取比较，覆盖前取得用户确认。
 6. **检查路径和覆盖优先级。** `backendPath` 指向 npm 包根目录或 fork 的完整运行产物，
    不是 Git checkout、全局 npm root 或 CLI 文件。`cwd` 必须存在，Node 路径可自动发现。
@@ -45,9 +45,10 @@
 - Keep startup separate from installation and updates. Never silently download, replace or select a different backend.
 - Do not modify the backend repository as part of launcher changes without a separate task basis.
 - Limited Pi tool modes are backend features, not an OS sandbox implemented by this launcher.
-- Preserve the application ID and existing user-data directory unless an approved migration is designed.
+- Use one product identity: Pi Web Launcher, application ID `local.pi.web.launcher`, data directory `Pi Web Launcher`.
+- Version 0.0.1 has no legacy-name aliases, fallback directories or automatic migration. Do not move or delete existing user data.
 - Runtime configuration lives in JSON; keep safe defaults in `config/` and personal settings outside source.
-- Preserve environment-variable compatibility. Do not log proxy credentials or model secrets.
+- Launcher-specific environment variables use only `PI_WEB_LAUNCHER_`. Do not log proxy credentials or model secrets.
 - Never commit credentials, sessions, logs, backend artifacts, thumbnail caches or real user configuration.
 - Only stop a backend whose process identity and ownership have been verified; never stop external services by guessing.
 - Use the existing minimal CommonJS style. Avoid unrelated formatting, refactors and feature expansion.

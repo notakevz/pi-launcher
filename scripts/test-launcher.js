@@ -56,8 +56,8 @@ async function runLauncher(profile, port) {
     dialog: { showErrorBox: (_title, message) => ready({ error: message }) },
     shell: { openExternal: async () => {}, openPath: async () => {} }, clipboard: { writeText: () => {} },
   }
-  process.env.PI_AGENT_LAUNCHER_PORT = String(port)
-  process.env.PI_AGENT_LAUNCHER_DATA_DIR = path.join(profile, "Pi Agent Launcher")
+  process.env.PI_WEB_LAUNCHER_PORT = String(port)
+  process.env.PI_WEB_LAUNCHER_DATA_DIR = path.join(profile, "Pi Web Launcher")
   const original = Module._load
   Module._load = function (name, ...args) { return name === "electron" ? electron : original.call(this, name, ...args) }
   try {
@@ -73,10 +73,10 @@ async function runLauncher(profile, port) {
 
 async function main() {
   require("./integration-prerequisites").integrationBackend()
-  const profile = fs.mkdtempSync(path.join(os.tmpdir(), "pi-launcher-test-"))
-  const originalCwd = process.env.PI_AGENT_LAUNCHER_CWD
-  process.env.PI_AGENT_LAUNCHER_CWD = profile
-  const stateDir = path.join(profile, "Pi Agent Launcher")
+  const profile = fs.mkdtempSync(path.join(os.tmpdir(), "pi-web-launcher-test-"))
+  const originalCwd = process.env.PI_WEB_LAUNCHER_CWD
+  process.env.PI_WEB_LAUNCHER_CWD = profile
+  const stateDir = path.join(profile, "Pi Web Launcher")
   const port = 30143
   let launcher, backend, external
   const originalAgentDir = process.env.PI_CODING_AGENT_DIR
@@ -90,19 +90,19 @@ async function main() {
     assert.equal(launcher.url, `http://127.0.0.1:${port}`)
     await delay(20)
     assert.ok(!launcher.menu().some(item => /更新|缓存/.test(item.label || "")))
-    assert.equal(launcher.app.name, "Pi Launcher")
-    assert.equal(launcher.window.title, "Pi Launcher")
+    assert.equal(launcher.app.name, "Pi Web Launcher")
+    assert.equal(launcher.window.title, "Pi Web Launcher")
     assert.equal(launcher.window.options.icon, path.resolve(__dirname, "../assets/icon.ico"))
     assert.equal(launcher.tray.icon, launcher.window.options.icon)
-    assert.equal(launcher.tray.tooltip, "Pi Launcher")
-    assert.ok(launcher.menu().some(item => item.label === "显示 Pi Launcher"))
+    assert.equal(launcher.tray.tooltip, "Pi Web Launcher")
+    assert.ok(launcher.menu().some(item => item.label === "显示 Pi Web Launcher"))
     let titlePrevented = false
     launcher.window.webContents.emit("page-title-updated", { preventDefault: () => { titlePrevented = true } }, "project - Pi Web")
     assert.ok(titlePrevented)
-    assert.equal(launcher.window.title, "Pi Launcher")
+    assert.equal(launcher.window.title, "Pi Web Launcher")
     const pkg = require("../package.json")
-    assert.equal(pkg.build.productName, "Pi Launcher")
-    assert.equal(pkg.build.nsis.shortcutName, "Pi Launcher")
+    assert.equal(pkg.build.productName, "Pi Web Launcher")
+    assert.equal(pkg.build.nsis.shortcutName, "Pi Web Launcher")
     for (const icon of [pkg.build.win.icon, pkg.build.nsis.installerIcon, pkg.build.nsis.uninstallerIcon]) {
       assert.equal(icon, "assets/icon.ico")
       assert.ok(fs.existsSync(path.resolve(__dirname, "..", icon)))
@@ -135,10 +135,10 @@ async function main() {
     if (launcher) { launcher.app.quit(); await launcher.quit }
     if (external) await external.backend.stop(port, external.server.info)
     await backend?.close()
-    delete process.env.PI_AGENT_LAUNCHER_DATA_DIR
-    delete process.env.PI_AGENT_LAUNCHER_PORT
-    if (originalCwd === undefined) delete process.env.PI_AGENT_LAUNCHER_CWD
-    else process.env.PI_AGENT_LAUNCHER_CWD = originalCwd
+    delete process.env.PI_WEB_LAUNCHER_DATA_DIR
+    delete process.env.PI_WEB_LAUNCHER_PORT
+    if (originalCwd === undefined) delete process.env.PI_WEB_LAUNCHER_CWD
+    else process.env.PI_WEB_LAUNCHER_CWD = originalCwd
     if (originalAgentDir === undefined) delete process.env.PI_CODING_AGENT_DIR
     else process.env.PI_CODING_AGENT_DIR = originalAgentDir
     fs.rmSync(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 })

@@ -7,7 +7,7 @@ const { inspectBackend } = require("../src/local-backend")
 
 async function main() {
   const backend = new PiBackend({
-    stateDir: process.env.PI_AGENT_LAUNCHER_DATA_DIR || path.join(process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming"), "Pi Agent Launcher"),
+    stateDir: process.env.PI_WEB_LAUNCHER_DATA_DIR || path.join(process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming"), "Pi Web Launcher"),
     log: console.log,
   })
   await backend.ensureAvailable()

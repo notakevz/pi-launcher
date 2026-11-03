@@ -3,9 +3,9 @@ const fs = require("node:fs")
 const path = require("node:path")
 const { PiBackend } = require("./backend")
 
-const APP_NAME = "Pi Launcher"
-const USER_DATA_DIR = process.env.PI_AGENT_LAUNCHER_DATA_DIR
-  ? path.resolve(process.env.PI_AGENT_LAUNCHER_DATA_DIR) : path.join(app.getPath("appData"), "Pi Agent Launcher")
+const APP_NAME = "Pi Web Launcher"
+const USER_DATA_DIR = process.env.PI_WEB_LAUNCHER_DATA_DIR
+  ? path.resolve(process.env.PI_WEB_LAUNCHER_DATA_DIR) : path.join(app.getPath("appData"), APP_NAME)
 let PORT
 const ICON = path.join(__dirname, "..", "assets", "icon.ico")
 const backend = new PiBackend({ stateDir: USER_DATA_DIR, log })
@@ -15,7 +15,7 @@ let zoomFactor = 1
 app.setName(APP_NAME)
 app.setPath("userData", USER_DATA_DIR)
 app.setPath("sessionData", path.join(USER_DATA_DIR, "session"))
-app.setAppUserModelId("local.pi.agent.launcher")
+app.setAppUserModelId("local.pi.web.launcher")
 
 if (!app.requestSingleInstanceLock()) {
   app.quit()

@@ -29,12 +29,12 @@ async function main() {
       async execute(){throw new Error('This smoke test must not execute tools or call a model')}});
   }`, "utf8")
   const backend = new PiBackend({ cwd: workspace, stateDir: path.join(temp, "launcher"), timeout: 90_000, log: console.log })
-  backend.env.PI_AGENT_LAUNCHER_BACKEND_PATH = backendRoot
+  backend.env.PI_WEB_LAUNCHER_BACKEND_PATH = backendRoot
   backend.env.PI_CODING_AGENT_DIR = agent
   backend.env.PI_OFFLINE = "1"
-  backend.env.PI_AGENT_LAUNCHER_PROXY_URL = "http://127.0.0.1:9"
+  backend.env.PI_WEB_LAUNCHER_PROXY_URL = "http://127.0.0.1:9"
   for (const key of ["HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy"]) backend.env[key] = "http://127.0.0.1:9"
-  const release = readRelease(backend.env.PI_AGENT_LAUNCHER_BACKEND_PATH, "none")
+  const release = readRelease(backend.env.PI_WEB_LAUNCHER_BACKEND_PATH, "none")
   const port = 30147
   let server
   try {
@@ -94,7 +94,7 @@ async function main() {
     for (let i = 0; i < 30 && !(await isPortFree(port)); i++) await delay(200)
     assert.ok(await isPortFree(port))
     const missing = new PiBackend({ cwd: workspace, stateDir: backend.stateDir })
-    missing.env = { ...backend.env, PI_AGENT_LAUNCHER_BACKEND_PATH: path.join(temp, "not-built") }
+    missing.env = { ...backend.env, PI_WEB_LAUNCHER_BACKEND_PATH: path.join(temp, "not-built") }
     await missing.ensureAvailable()
     await assert.rejects(missing.start(port), /请手动构建后端/)
     assert.ok(!fs.existsSync(path.join(backend.stateDir, "source-backend-version.json")))

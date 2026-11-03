@@ -18,9 +18,9 @@ async function main() {
   const instances = []
   function instance(options = {}) {
     const backend = new PiBackend({ cwd: root, stateDir, log: console.log, ...options })
-    Object.assign(backend.env, { PI_AGENT_LAUNCHER_BACKEND_PATH: backendRoot,
-      PI_CODING_AGENT_DIR: agentDir, PI_OFFLINE: "1", PI_AGENT_LAUNCHER_NPX: "Z:\\missing-npx.js",
-      PI_AGENT_LAUNCHER_SOURCE_BACKEND: "Z:\\missing-old-bundle", PI_AGENT_LAUNCHER_BACKEND: "npm" })
+    Object.assign(backend.env, { PI_WEB_LAUNCHER_BACKEND_PATH: backendRoot,
+      PI_CODING_AGENT_DIR: agentDir, PI_OFFLINE: "1", PI_WEB_LAUNCHER_NPX: "Z:\\missing-npx.js",
+      PI_WEB_LAUNCHER_SOURCE_BACKEND: "Z:\\missing-old-bundle", PI_WEB_LAUNCHER_BACKEND: "npm" })
     instances.push(backend)
     return backend
   }
@@ -46,7 +46,7 @@ async function main() {
 
     const externalState = path.join(root, "external")
     const external = instance({ stateDir: externalState })
-    delete external.env.PI_AGENT_LAUNCHER_BACKEND_PATH
+    delete external.env.PI_WEB_LAUNCHER_BACKEND_PATH
     await external.ensureAvailable()
     const externalServer = await external.start(port)
     assert.equal(externalServer.owned, false)

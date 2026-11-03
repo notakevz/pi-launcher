@@ -38,7 +38,7 @@ Electron 安装需要下载对应平台二进制。下载失败时检查终端�
 npm/Electron 安装时的终端网络配置。
 
 复制 `config/launcher-config.example.json` 到
-`%APPDATA%\Pi Agent Launcher\launcher-config.json`，按实际情况填写。
+`%APPDATA%\Pi Web Launcher\launcher-config.json`，按实际情况填写。
 首次构建前配置 `cwd`、网络等；`backendPath` 指向将要生成的运行目录。
 已有真实配置时先人工比较，不覆盖它。
 
@@ -74,7 +74,7 @@ npm run backend:check -- --verify
 确认端口空闲后执行；真实模型调用必须先取得用户许可。
 
 ```powershell
-$env:PI_AGENT_LAUNCHER_BACKEND_PATH = 'C:/pi-web/backend-next'
+$env:PI_WEB_LAUNCHER_BACKEND_PATH = 'C:/pi-web/backend-next'
 npm run test:integration
 npm run test:source-web
 npm run test:loading
@@ -100,9 +100,9 @@ npm run test:loading
 这些扩展是可信可执行代码，只能使用已审查且版本匹配的实现。
 
 ```powershell
-$env:PI_AGENT_LAUNCHER_BACKEND_PATH = 'C:/pi-web/backend-next'
-$env:PI_AGENT_LAUNCHER_SUBAGENT_PATH = 'C:/test-fixtures/subagent' # 包含 policy.ts、index.ts
-$env:PI_AGENT_LAUNCHER_AGENTS_PATH = 'C:/test-fixtures/agents' # 四角色 Markdown
+$env:PI_WEB_LAUNCHER_BACKEND_PATH = 'C:/pi-web/backend-next'
+$env:PI_WEB_LAUNCHER_SUBAGENT_PATH = 'C:/test-fixtures/subagent' # 包含 policy.ts、index.ts
+$env:PI_WEB_LAUNCHER_AGENTS_PATH = 'C:/test-fixtures/agents' # 四角色 Markdown
 npm run test:subagent
 ```
 
@@ -120,6 +120,8 @@ npm run test:packaged
 
 - [ ] 在 Windows 上实际安装、启动、关闭隐藏、唤回、退出。
 - [ ] 确认缺少 Node/后端时的错误提示，不以开发机有依赖代替验收。
+- [ ] 名称统一为 Pi Web Launcher，EXE/快捷方式/窗口/托盘/启动页没有其他产品名。
+- [ ] 应用 ID、默认数据目录、新环境变量前缀与配置指南一致，不搜索或迁移其他目录。
 - [ ] 安装路径含空格时可用，用户配置不因重装丢失。
 - [ ] 安装包不含 credentials、sessions、日志、后端产物或个人配置。
 - [ ] 发布说明写明版本、平台、后端兼容性和未验项目。

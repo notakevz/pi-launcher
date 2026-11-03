@@ -11,16 +11,16 @@ if (fs.existsSync(path.join(resources, "source-backend"))) throw new Error("The 
 
 // Never adopt/stop the user's current server or write to their Electron profile.
 const profile = fs.mkdtempSync(path.join(os.tmpdir(), "pi-packaged-smoke-"))
-const stateDir = path.join(profile, "Pi Agent Launcher")
+const stateDir = path.join(profile, "Pi Web Launcher")
 fs.mkdirSync(stateDir)
 fs.mkdirSync(path.join(profile, "workspace"))
 // The application must launch this external artifact directly, without staging it.
-process.env.PI_AGENT_LAUNCHER_BACKEND_PATH = backendRoot
+process.env.PI_WEB_LAUNCHER_BACKEND_PATH = backendRoot
 app.setPath("appData", profile)
-process.env.PI_AGENT_LAUNCHER_DATA_DIR = stateDir
-process.env.PI_AGENT_LAUNCHER_PORT = "30145"
-process.env.PI_AGENT_LAUNCHER_CWD = path.join(profile, "workspace")
-process.env.PI_AGENT_LAUNCHER_OFFLINE = "1"
+process.env.PI_WEB_LAUNCHER_DATA_DIR = stateDir
+process.env.PI_WEB_LAUNCHER_PORT = "30145"
+process.env.PI_WEB_LAUNCHER_CWD = path.join(profile, "workspace")
+process.env.PI_WEB_LAUNCHER_OFFLINE = "1"
 process.env.PI_CODING_AGENT_DIR = path.join(profile, "agent")
 // A synthetic model keeps the composer visible without copying credentials or calling a provider.
 fs.mkdirSync(process.env.PI_CODING_AGENT_DIR)
@@ -64,8 +64,8 @@ app.on("browser-window-created", (_event, win) => {
         await new Promise((resolve) => setTimeout(resolve, 200))
       }
       assert.ok(summary.buttons >= 3, "The real Web UI must render its controls")
-      assert.equal(win.getTitle(), "Pi Launcher")
-      assert.equal(app.getName(), "Pi Launcher")
+      assert.equal(win.getTitle(), "Pi Web Launcher")
+      assert.equal(app.getName(), "Pi Web Launcher")
       const record = JSON.parse(fs.readFileSync(path.join(stateDir, "pi-web-30145.json"), "utf8"))
       assert.equal(record.version, release.version)
       assert.equal(record.entry, path.join(backendRoot, "bin", "pi-web.js"))
@@ -89,7 +89,7 @@ app.on("browser-window-created", (_event, win) => {
       let output
       try {
         const screenshot = await win.webContents.capturePage()
-        output = path.join(__dirname, "../.build/pi-agent-launcher-smoke.png")
+        output = path.join(__dirname, "../.build/pi-web-launcher-smoke.png")
         fs.mkdirSync(path.dirname(output), { recursive: true })
         fs.writeFileSync(output, screenshot.toPNG())
       } catch (error) {

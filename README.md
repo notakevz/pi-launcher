@@ -83,9 +83,9 @@ $backendPath = (Resolve-Path './release/backend').Path
 if (!$backendPath -or !(Test-Path -LiteralPath $backendPath -PathType Container)) {
     throw '请先完成上面的后端安装或构建，再写入配置。'
 }
-$configDir = if ($env:PI_AGENT_LAUNCHER_DATA_DIR) {
-    [IO.Path]::GetFullPath($env:PI_AGENT_LAUNCHER_DATA_DIR)
-} else { Join-Path $env:APPDATA 'Pi Agent Launcher' }
+$configDir = if ($env:PI_WEB_LAUNCHER_DATA_DIR) {
+    [IO.Path]::GetFullPath($env:PI_WEB_LAUNCHER_DATA_DIR)
+} else { Join-Path $env:APPDATA 'Pi Web Launcher' }
 $configFile = Join-Path $configDir 'launcher-config.json'
 New-Item -ItemType Directory -Force -Path $configDir | Out-Null
 if (!(Test-Path -LiteralPath $configFile)) {
@@ -96,8 +96,8 @@ Write-Host "本次选择的后端目录：$backendPath"
 notepad $configFile
 ```
 
-配置文件默认位于 **`%APPDATA%\Pi Agent Launcher\launcher-config.json`**，目录名称为兼容旧版而保留。
-设置过 `PI_AGENT_LAUNCHER_DATA_DIR` 时，上面的命令与应用都会使用该自定义目录。
+配置文件默认位于 **`%APPDATA%\Pi Web Launcher\launcher-config.json`**。
+设置过 `PI_WEB_LAUNCHER_DATA_DIR` 时，上面的命令与应用都会使用该自定义目录。
 如果已有配置，切换后端时只需把 `backendPath` 改为上面打印的目录。
 `cwd` 是默认工作目录，可以改为你实际使用的项目目录。
 
@@ -116,7 +116,7 @@ notepad $configFile
 npm start
 ```
 
-已安装客户端的用户，直接打开桌面或开始菜单中的 **Pi Launcher**。
+已安装客户端的用户，直接打开桌面或开始菜单中的 **Pi Web Launcher**。
 第一次使用时，在 Pi Web 的 Models 面板中登录模型提供方或配置 API Key。
 
 - **关闭窗口**：隐藏到托盘，后端继续运行。

@@ -15,8 +15,8 @@ const project = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const { integrationBackend, requireDirectory } = require("./integration-prerequisites");
 const backendRoot = integrationBackend();
 const sdkRoot = path.join(backendRoot, "node_modules/@earendil-works/pi-coding-agent");
-const extensionRoot = requireDirectory("PI_AGENT_LAUNCHER_SUBAGENT_PATH");
-const userRoles = requireDirectory("PI_AGENT_LAUNCHER_AGENTS_PATH");
+const extensionRoot = requireDirectory("PI_WEB_LAUNCHER_SUBAGENT_PATH");
+const userRoles = requireDirectory("PI_WEB_LAUNCHER_AGENTS_PATH");
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), "pi-subagent-policy-"));
 const agentDir = path.join(temp, "agent"), workspace = path.join(temp, "workspace");
 const marker = path.join(temp, "FORBIDDEN_RESOURCE_LOADED");
@@ -154,7 +154,7 @@ try {
   fs.rmSync(path.join(workspace, ".pi"), { recursive: true });
   assert.ok(await isPortFree(30149), "Refusing to touch an occupied integration-test port");
   backend = new PiBackend({ cwd: workspace, stateDir: path.join(temp, "launcher"), log: console.log });
-  Object.assign(backend.env, { PI_AGENT_LAUNCHER_BACKEND_PATH: backendRoot, PI_CODING_AGENT_DIR: agentDir, PI_OFFLINE: "1" });
+  Object.assign(backend.env, { PI_WEB_LAUNCHER_BACKEND_PATH: backendRoot, PI_CODING_AGENT_DIR: agentDir, PI_OFFLINE: "1" });
   await backend.ensureAvailable();
   webServer = await backend.start(30149);
   const api = async (endpoint, data) => {

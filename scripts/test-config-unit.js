@@ -32,10 +32,10 @@ test("all runtime fields use environment > user JSON > shipped JSON", async t =>
     port: 31111, nodePath: process.execPath, proxyUrl: "http://user-proxy.example:8080", noProxy: ["user.local"], startupTimeoutMs: 1234 }
   f.write(user)
   assert.deepEqual(await f.read(), user)
-  const env = { PI_AGENT_LAUNCHER_BACKEND_PATH: path.join(f.root, "env-backend"), PI_AGENT_LAUNCHER_CWD: f.home,
-    PI_AGENT_LAUNCHER_PORT: "32222", PI_AGENT_LAUNCHER_NODE: process.execPath,
-    PI_AGENT_LAUNCHER_PROXY_URL: "", PI_AGENT_LAUNCHER_NO_PROXY: "env.local, other.local", PI_AGENT_LAUNCHER_STARTUP_TIMEOUT_MS: "4321" }
-  assert.deepEqual(await f.read(env), { schemaVersion: 1, backendPath: env.PI_AGENT_LAUNCHER_BACKEND_PATH,
+  const env = { PI_WEB_LAUNCHER_BACKEND_PATH: path.join(f.root, "env-backend"), PI_WEB_LAUNCHER_CWD: f.home,
+    PI_WEB_LAUNCHER_PORT: "32222", PI_WEB_LAUNCHER_NODE: process.execPath,
+    PI_WEB_LAUNCHER_PROXY_URL: "", PI_WEB_LAUNCHER_NO_PROXY: "env.local, other.local", PI_WEB_LAUNCHER_STARTUP_TIMEOUT_MS: "4321" }
+  assert.deepEqual(await f.read(env), { schemaVersion: 1, backendPath: env.PI_WEB_LAUNCHER_BACKEND_PATH,
     cwd: f.home, port: 32222, nodePath: process.execPath, proxyUrl: "", noProxy: ["env.local", "other.local"], startupTimeoutMs: 4321 })
   f.write({ ...user, port: "invalid", cwd: false, proxyUrl: 42 })
   assert.equal((await f.read(env)).port, 32222, "valid environment overrides invalid lower-priority values")
@@ -63,7 +63,7 @@ test("configuration validates types, ranges, paths, schema and noProxy", async t
     f.write({ startupTimeoutMs: value })
     await assert.rejects(f.read(), /startupTimeoutMs/)
   }
-  for (const value of ["", "nan", "0", "65536"]) await assert.rejects(f.read({ PI_AGENT_LAUNCHER_PORT: value }), /port/)
+  for (const value of ["", "nan", "0", "65536"]) await assert.rejects(f.read({ PI_WEB_LAUNCHER_PORT: value }), /port/)
   f.write({ nodePath: path.join(f.root, "missing-node") })
   await assert.rejects(f.read(), /nodePath.*不存在/)
   f.write({ cwd: path.join(f.root, "missing-workspace") })
@@ -102,7 +102,7 @@ test("proxy policy inherits only existing environment or stays direct; empty ove
   assert.equal(configured.HTTP_PROXY, "http://configured.example:8080")
   assert.equal(configured.NO_PROXY, "private.local,intranet,localhost,127.0.0.1,::1")
   for (const env of [serverEnvironment({ ALL_PROXY: "socks5://proxy.example:1080" }, { proxyUrl: "" }),
-    serverEnvironment({ PI_AGENT_LAUNCHER_PROXY_URL: "", HTTPS_PROXY: "http://proxy.example", all_proxy: "socks5://proxy.example" }, { proxyUrl: "http://configured.example" })]) {
+    serverEnvironment({ PI_WEB_LAUNCHER_PROXY_URL: "", HTTPS_PROXY: "http://proxy.example", all_proxy: "socks5://proxy.example" }, { proxyUrl: "http://configured.example" })]) {
     for (const key of ["HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy", "ALL_PROXY", "all_proxy"]) assert.equal(env[key], undefined)
     assert.ok(env.NO_PROXY.includes("127.0.0.1"))
   }
@@ -145,7 +145,7 @@ test("manual manifest checks accept explicitly configured alternative repositori
 test("healthy external service is reused without any configured local backend or runtime", async t => {
   const f = fixture(t), logs = []
   const backend = new PiBackend({ cwd: f.home, stateDir: f.root, log: message => logs.push(message) })
-  backend.env = { PI_AGENT_LAUNCHER_NODE: path.join(f.root, "missing-node") }
+  backend.env = { PI_WEB_LAUNCHER_NODE: path.join(f.root, "missing-node") }
   fs.writeFileSync(backend.recordPath(30141), "{damaged")
   // Stub HTTP responses: do not bind a port or start a service.
   t.mock.method(http, "get", (url, callback) => {

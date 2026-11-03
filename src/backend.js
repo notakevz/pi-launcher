@@ -14,7 +14,7 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 // npm is located only for the explicit manual build command, never for application startup.
 function resolveRuntime(source = process.env, requireNpx = false) {
   const directories = (source.PATH || source.Path || "").split(path.delimiter).map(dir => dir.replace(/^"|"$/g, ""))
-  const candidates = source.PI_AGENT_LAUNCHER_NODE ? [source.PI_AGENT_LAUNCHER_NODE] : [
+  const candidates = source.PI_WEB_LAUNCHER_NODE ? [source.PI_WEB_LAUNCHER_NODE] : [
     ...directories.map(dir => path.join(dir, "node.exe")),
     path.join(source.ProgramFiles || source.PROGRAMFILES || "C:\\Program Files", "nodejs", "node.exe"),
   ]
@@ -22,7 +22,7 @@ function resolveRuntime(source = process.env, requireNpx = false) {
   if (!node) throw new Error("找不到 Windows Node.js。请安装 Node.js 22.19 或更新版本。")
   if (!requireNpx) return { node: fs.realpathSync(node) }
   const appData = source.APPDATA || path.join(os.homedir(), "AppData", "Roaming")
-  const npx = (source.PI_AGENT_LAUNCHER_NPX ? [source.PI_AGENT_LAUNCHER_NPX] : [
+  const npx = (source.PI_WEB_LAUNCHER_NPX ? [source.PI_WEB_LAUNCHER_NPX] : [
     path.join(path.dirname(node), "node_modules/npm/bin/npx-cli.js"),
     path.join(appData, "npm/node_modules/npm/bin/npx-cli.js"),
   ]).find(file => fs.statSync(file, { throwIfNoEntry: false })?.isFile())
@@ -32,15 +32,15 @@ function resolveRuntime(source = process.env, requireNpx = false) {
 
 function serverEnvironment(source = process.env, config = {}) {
   const env = { ...source }
-  const proxy = validateProxyUrl(source.PI_AGENT_LAUNCHER_PROXY_URL ?? config.proxyUrl ?? source.HTTPS_PROXY ?? source.https_proxy ?? source.HTTP_PROXY ?? source.http_proxy ?? "")
+  const proxy = validateProxyUrl(source.PI_WEB_LAUNCHER_PROXY_URL ?? config.proxyUrl ?? source.HTTPS_PROXY ?? source.https_proxy ?? source.HTTP_PROXY ?? source.http_proxy ?? "")
   for (const key of ["HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy"]) {
     if (proxy) env[key] = proxy
     else delete env[key]
   }
   // Node's environment proxy transport supports HTTP(S), not SOCKS. Preserve
   // ALL_PROXY only for components that already understand it; never promote it.
-  if ((source.PI_AGENT_LAUNCHER_PROXY_URL ?? config.proxyUrl) === "") { delete env.ALL_PROXY; delete env.all_proxy }
-  const bypass = source.PI_AGENT_LAUNCHER_NO_PROXY ?? [...(config.noProxy || []), source.NO_PROXY ?? source.no_proxy ?? ""].join(",")
+  if ((source.PI_WEB_LAUNCHER_PROXY_URL ?? config.proxyUrl) === "") { delete env.ALL_PROXY; delete env.all_proxy }
+  const bypass = source.PI_WEB_LAUNCHER_NO_PROXY ?? [...(config.noProxy || []), source.NO_PROXY ?? source.no_proxy ?? ""].join(",")
   env.NO_PROXY = env.no_proxy = [...new Set([...bypass.split(",").map(s => s.trim()).filter(Boolean), "localhost", "127.0.0.1", "::1"])].join(",")
   env.NODE_USE_ENV_PROXY = "1"
   env.PI_WEB_NO_OPEN = "1"
@@ -49,7 +49,7 @@ function serverEnvironment(source = process.env, config = {}) {
   delete env.ELECTRON_RUN_AS_NODE
   delete env.NODE_OPTIONS
   // Do not inherit the old launcher's staging directory or npm lifecycle context.
-  delete env.PI_AGENT_LAUNCHER_BACKEND_DIR
+  delete env.PI_WEB_LAUNCHER_BACKEND_DIR
   for (const key of Object.keys(env)) {
     if (/^npm_(?:package_|lifecycle_|command$|execpath$|node_execpath$|config_(?:package|local_prefix|offline)$)/i.test(key) || key === "INIT_CWD") delete env[key]
   }
@@ -117,12 +117,12 @@ class PiBackend {
 
   async ensureAvailable() {
     if (process.platform !== "win32") throw new Error("此启动器需要 Windows。")
-    this.config = await readLauncherConfig(this.stateDir, { ...this.env, ...(this.cwd ? { PI_AGENT_LAUNCHER_CWD: this.cwd } : {}) })
+    this.config = await readLauncherConfig(this.stateDir, { ...this.env, ...(this.cwd ? { PI_WEB_LAUNCHER_CWD: this.cwd } : {}) })
     this.cwd = this.config.cwd
     this.timeout ??= this.config.startupTimeoutMs
     this.root = this.config.backendPath
     this.env = serverEnvironment(this.env, this.config)
-    if (this.config.nodePath) this.env.PI_AGENT_LAUNCHER_NODE = this.config.nodePath
+    if (this.config.nodePath) this.env.PI_WEB_LAUNCHER_NODE = this.config.nodePath
   }
 
   async ensureRuntime() {

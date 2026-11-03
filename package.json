@@ -37,8 +37,8 @@
   },
   "allowScripts": { "electron": true, "app-builder-bin": true },
   "build": {
-    "appId": "local.pi.agent.launcher",
-    "productName": "Pi Launcher",
+    "appId": "local.pi.web.launcher",
+    "productName": "Pi Web Launcher",
     "directories": { "output": "dist" },
     "files": ["src/main.js", "src/backend.js", "src/local-backend.js", "src/process-tools.js", "assets/**/*", "config/launcher-defaults.json", "config/launcher-config.example.json", "LICENSE", "THIRD_PARTY_NOTICES.md", "package.json"],
     "win": { "icon": "assets/icon.ico", "target": "nsis" },
@@ -48,7 +48,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Pi Launcher",
+      "shortcutName": "Pi Web Launcher",
       "installerIcon": "assets/icon.ico",
       "uninstallerIcon": "assets/icon.ico"
     }
