@@ -85,7 +85,9 @@ GitHub Actions 的 Node/OS 矩阵只覆盖这一层，不是安装包或真实�
   [releasing.md](releasing.md)，不是 README。
 - 产物目录须为新目录；交付失败按错误中的恢复路径核对，不自动删除保留的完整产物或部分输出。
 - 保留 Electron/Chromium/Node 等第三方许可，不因本项目 MIT 而移除依赖通知。
-- 图标为本项目自有图案，`python scripts/generate-icon.py` 仅用于重建 PNG/ICO，需要 Pillow。
+- 应用图标为 Pi 项目 logo（MIT，Copyright (c) 2025 Mario Zechner，透明背景、未修改），
+  版权与来源见 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)；`python scripts/generate-icon.py`
+  仅用于从 `assets/icon.svg` 重建 PNG/ICO，需要 Pillow，输出确定可复现。
 - `Build Windows` 仅手动触发：Windows runner 安装依赖、运行自包含检查、生成未签名 x64 NSIS 安装包，
   只上传 EXE 和 SHA-256 文件为 Actions 附件，保留 7 天。没有后端、个人配置或真实模型测试。
 - 构建 job 保持只读权限；`--publish never` 禁止 electron-builder 隐式发布。

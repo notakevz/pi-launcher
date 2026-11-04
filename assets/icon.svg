@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-  <rect x="16" y="28" width="224" height="200" rx="28" fill="#26364D"/>
-  <rect x="40" y="52" width="16" height="12" rx="4" fill="#E9A777"/>
-  <rect x="64" y="52" width="16" height="12" rx="4" fill="#7AC2CF"/>
-  <rect x="88" y="52" width="128" height="12" rx="4" fill="#52657E"/>
-  <polygon points="60,104 78,104 122,142 78,180 60,180 104,142" fill="#E9A777"/>
-  <rect x="132" y="166" width="60" height="14" rx="3" fill="#7AC2CF"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800">
+  <!-- Pi project logo, unmodified on a transparent background.
+       MIT License, Copyright (c) 2025 Mario Zechner.
+       Source: https://pi.dev/logo-auto.svg (https://github.com/earendil-works/pi) -->
+  <polygon points="165.29,165.29 517.36,165.29 517.36,400 400,400 400,282.65 165.29,282.65" fill="#F09082"/>
+  <polygon points="165.29,282.65 282.65,282.65 282.65,400 400,400 400,517.36 282.65,517.36 282.65,634.72 165.29,634.72" fill="#4D9ABF"/>
+  <polygon points="517.36,400 634.72,400 634.72,634.72 517.36,634.72" fill="#F1BE58"/>
 </svg>

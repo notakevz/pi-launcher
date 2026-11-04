@@ -1,5 +1,7 @@
-"""Render the project's own geometric SVG to PNG and Windows ICO.
+"""Render the Pi project logo (assets/icon.svg) to PNG and Windows ICO.
 
+The icon is the Pi project logo, unmodified on a transparent background
+(MIT License, Copyright (c) 2025 Mario Zechner; see THIRD_PARTY_NOTICES.md).
 Requires Pillow only when rebuilding icons. No downloads or external artwork.
 """
 from pathlib import Path
@@ -9,10 +11,12 @@ from PIL import Image, ImageDraw
 root = Path(__file__).resolve().parents[1]
 svg = ET.parse(root / "assets" / "icon.svg").getroot()
 size = 1024
-scale = size / 256
+scale = size / float(svg.get("viewBox").split()[2])
 image = Image.new("RGBA", (size, size), (0, 0, 0, 0))
 draw = ImageDraw.Draw(image)
 for element in svg:
+    if not isinstance(element.tag, str):  # comments
+        continue
     kind = element.tag.rsplit("}", 1)[-1]
     fill = element.attrib["fill"]
     if kind == "rect":
