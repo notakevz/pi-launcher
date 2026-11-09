@@ -16,7 +16,7 @@ function fixture(t) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "pi-release-unit-"))
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }))
   const files = {
-    "pi-web-launcher-0.0.1-x64-setup.exe": Buffer.from([0x4d, 0x5a, 0x00, 0xff]),
+    "pi-launcher-0.0.1-x64-setup.exe": Buffer.from([0x4d, 0x5a, 0x00, 0xff]),
     "portable.exe": Buffer.from("second mock EXE, never executed"),
   }
   for (const [name, data] of Object.entries(files)) fs.writeFileSync(path.join(directory, name), data)
@@ -75,10 +75,10 @@ test("module import is inert, uses built-ins only and never constructs a real AP
 
 test("NSIS uses a stable no-space installer name so source artifacts and release checksums keep identical names", () => {
   const pkg = require("../package.json")
-  assert.equal(pkg.build.productName, "Pi Web Launcher")
-  assert.equal(pkg.build.nsis.shortcutName, "Pi Web Launcher")
-  assert.equal(pkg.build.nsis.artifactName, "pi-web-launcher-${version}-${arch}-setup.${ext}")
-  assert.equal(pkg.build.nsis.artifactName.replace("${version}", pkg.version).replace("${arch}", "x64").replace("${ext}", "exe"), "pi-web-launcher-0.0.1-x64-setup.exe")
+  assert.equal(pkg.build.productName, "Pi Launcher")
+  assert.equal(pkg.build.nsis.shortcutName, "Pi Launcher")
+  assert.equal(pkg.build.nsis.artifactName, "pi-launcher-${version}-${arch}-setup.${ext}")
+  assert.equal(pkg.build.nsis.artifactName.replace("${version}", pkg.version).replace("${arch}", "x64").replace("${ext}", "exe"), "pi-launcher-0.0.1-x64-setup.exe")
 })
 
 test("validates CRLF checksums, atomically tags the source SHA, uploads buffers, then publishes", async t => {
@@ -93,7 +93,7 @@ test("validates CRLF checksums, atomically tags the source SHA, uploads buffers,
   const draft = f.calls[3].args
   assert.equal(draft.tag_name, "v0.0.1")
   assert.equal(draft.target_commitish, f.options.context.sha)
-  assert.equal(draft.name, "Pi Web Launcher v0.0.1")
+  assert.equal(draft.name, "Pi Launcher v0.0.1")
   assert.equal(draft.draft, true)
   assert.equal(draft.prerelease, false)
   assert.match(draft.body, /Unsigned Windows x64/)
@@ -300,7 +300,7 @@ test("bad or incomplete artifact manifests and non-whitelisted files fail before
 })
 
 test("rejects filenames GitHub could normalize before any API, even with otherwise valid checksums", async t => {
-  for (const name of ["Pi Web Launcher Setup.exe", "安装程序.exe", "café.exe", "setup(1).exe", "setup+build.exe", ".hidden.exe", "setup%20name.exe"]) await t.test(name, async t => {
+  for (const name of ["Pi Launcher Setup.exe", "安装程序.exe", "café.exe", "setup(1).exe", "setup+build.exe", ".hidden.exe", "setup%20name.exe"]) await t.test(name, async t => {
     const f = fixture(t)
     fs.renameSync(path.join(f.options.directory, "portable.exe"), path.join(f.options.directory, name))
     fs.writeFileSync(path.join(f.options.directory, "SHA256SUMS.txt"), f.checksum.replace("portable.exe", name))
@@ -340,7 +340,7 @@ test("SemVer prerelease detection ignores build metadata, and LF/BOM checksums a
       const draft = f.calls.find(call => call.method === "createRelease").args
       assert.equal(draft.prerelease, prerelease)
       assert.equal(draft.tag_name, `v${version}`)
-      assert.equal(draft.name, `Pi Web Launcher v${version}`)
+      assert.equal(draft.name, `Pi Launcher v${version}`)
     })
   }
 })

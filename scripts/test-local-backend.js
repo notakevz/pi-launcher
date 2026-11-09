@@ -5,7 +5,7 @@ const path = require("node:path")
 const { createRequire } = require("node:module")
 const { test } = require("node:test")
 const { backendPath: configuredBackendPath, inspectBackend } = require("../src/local-backend")
-const backendPath = (root, env) => configuredBackendPath(root, { PI_WEB_LAUNCHER_CWD: root, ...env })
+const backendPath = (root, env) => configuredBackendPath(root, { PI_LAUNCHER_CWD: root, ...env })
 const { PiBackend, resolveRuntime, serverEnvironment, backendArguments, commandHasPath } = require("../src/backend")
 
 function fixture(t) {
@@ -40,19 +40,19 @@ test("explicit environment path overrides user config", async t => {
   const root = fixture(t)
   fs.writeFileSync(path.join(root, "launcher-config.json"), JSON.stringify({ backendPath: path.join(root, "config") }), "utf8")
   assert.equal(await backendPath(root, {}), path.join(root, "config"))
-  assert.equal(await backendPath(root, { PI_WEB_LAUNCHER_BACKEND_PATH: path.join(root, "env") }), path.join(root, "env"))
+  assert.equal(await backendPath(root, { PI_LAUNCHER_BACKEND_PATH: path.join(root, "env") }), path.join(root, "env"))
 })
 test("bad configuration fails clearly instead of downloading or selecting a fallback", async t => {
   const root = fixture(t)
-  await assert.rejects(backendPath(root, { PI_WEB_LAUNCHER_BACKEND_PATH: "relative" }), /绝对路径/)
-  await assert.rejects(backendPath(root, { PI_WEB_LAUNCHER_BACKEND_PATH: "" }), /绝对路径/)
+  await assert.rejects(backendPath(root, { PI_LAUNCHER_BACKEND_PATH: "relative" }), /绝对路径/)
+  await assert.rejects(backendPath(root, { PI_LAUNCHER_BACKEND_PATH: "" }), /绝对路径/)
   fs.writeFileSync(path.join(root, "launcher-config.json"), "{bad json", "utf8")
   await assert.rejects(backendPath(root, {}), /launcher-config/)
 })
 test("old automatic-update environment settings are ignored", async t => {
   const root = fixture(t)
-  await assert.rejects(backendPath(root, { PI_WEB_LAUNCHER_SOURCE_BACKEND: "missing", PI_WEB_LAUNCHER_BACKEND: "npm",
-    PI_WEB_LAUNCHER_BACKEND_DIR: "missing", PI_WEB_LAUNCHER_OFFLINE: "0" }), /未配置 backendPath/)
+  await assert.rejects(backendPath(root, { PI_LAUNCHER_SOURCE_BACKEND: "missing", PI_LAUNCHER_BACKEND: "npm",
+    PI_LAUNCHER_BACKEND_DIR: "missing", PI_LAUNCHER_OFFLINE: "0" }), /未配置 backendPath/)
 })
 test("backend metadata is read in place without copying, hashing or writing version state", async t => {
   const root = fixture(t)
@@ -162,7 +162,7 @@ test("backend package identity and version are still required", async t => {
   }
 })
 test("application startup requires only Node, not npm/npx", () => {
-  const env = { PI_WEB_LAUNCHER_NODE: process.execPath, PI_WEB_LAUNCHER_NPX: "Z:\\missing-npx-cli.js" }
+  const env = { PI_LAUNCHER_NODE: process.execPath, PI_LAUNCHER_NPX: "Z:\\missing-npx-cli.js" }
   assert.equal(resolveRuntime(env).node, fs.realpathSync(process.execPath))
   assert.equal(resolveRuntime(env).npx, undefined)
   assert.throws(() => resolveRuntime(env, true), /手动构建需要 npm/)
@@ -175,14 +175,14 @@ test("backend arguments invoke the configured CLI directly, with no launcher boo
 })
 test("proxy policy and npm context are sanitized without changing user configuration", () => {
   const env = serverEnvironment({ HTTPS_PROXY: "http://proxy.example:8080", NO_PROXY: "intranet", npm_package_name: "parent",
-    npm_config_cache: "keep-cache", ELECTRON_RUN_AS_NODE: "1", PI_WEB_LAUNCHER_BACKEND_DIR: "old-staging" })
+    npm_config_cache: "keep-cache", ELECTRON_RUN_AS_NODE: "1", PI_LAUNCHER_BACKEND_DIR: "old-staging" })
   assert.ok(env.NO_PROXY.includes("intranet") && env.NO_PROXY.includes("127.0.0.1"))
   assert.equal(env.PI_WEB_SKIP_VERSION_CHECK, "1")
   assert.equal(env.npm_package_name, undefined)
   assert.equal(env.npm_config_cache, "keep-cache")
   assert.equal(env.ELECTRON_RUN_AS_NODE, undefined)
-  assert.equal(env.PI_WEB_LAUNCHER_BACKEND_DIR, undefined)
-  const disabled = serverEnvironment({ PI_WEB_LAUNCHER_PROXY_URL: "", ALL_PROXY: "socks5://elsewhere" })
+  assert.equal(env.PI_LAUNCHER_BACKEND_DIR, undefined)
+  const disabled = serverEnvironment({ PI_LAUNCHER_PROXY_URL: "", ALL_PROXY: "socks5://elsewhere" })
   assert.equal(disabled.HTTP_PROXY, undefined)
   assert.equal(disabled.ALL_PROXY, undefined)
 })

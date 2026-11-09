@@ -1,6 +1,6 @@
 # Third-party notices
 
-Pi Web Launcher code and documentation are licensed under this repository's MIT
+Pi Launcher code and documentation are licensed under this repository's MIT
 license. The project is not an official Pi or Pi Web client and does not claim
 ownership of third-party names, trademarks or code.
 

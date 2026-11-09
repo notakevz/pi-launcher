@@ -1,16 +1,16 @@
 {
-  "name": "pi-web-launcher",
+  "name": "pi-launcher",
   "version": "0.0.1",
   "private": true,
   "license": "MIT",
   "description": "Windows desktop launcher for an npm-installed or locally built Pi Web backend.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/notakevz/pi-web-launcher.git"
+    "url": "https://github.com/notakevz/pi-launcher.git"
   },
-  "homepage": "https://github.com/notakevz/pi-web-launcher#readme",
+  "homepage": "https://github.com/notakevz/pi-launcher#readme",
   "bugs": {
-    "url": "https://github.com/notakevz/pi-web-launcher/issues"
+    "url": "https://github.com/notakevz/pi-launcher/issues"
   },
   "engines": {
     "node": ">=22.19.0"
@@ -37,19 +37,19 @@
   },
   "allowScripts": { "electron": true, "app-builder-bin": true },
   "build": {
-    "appId": "local.pi.web.launcher",
-    "productName": "Pi Web Launcher",
+    "appId": "local.pi.launcher",
+    "productName": "Pi Launcher",
     "directories": { "output": "dist" },
     "files": ["src/main.js", "src/backend.js", "src/local-backend.js", "src/process-tools.js", "assets/**/*", "config/launcher-defaults.json", "config/launcher-config.example.json", "LICENSE", "THIRD_PARTY_NOTICES.md", "package.json"],
     "win": { "icon": "assets/icon.ico", "target": "nsis" },
     "nsis": {
-      "artifactName": "pi-web-launcher-${version}-${arch}-setup.${ext}",
+      "artifactName": "pi-launcher-${version}-${arch}-setup.${ext}",
       "oneClick": false,
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Pi Web Launcher",
+      "shortcutName": "Pi Launcher",
       "installerIcon": "assets/icon.ico",
       "uninstallerIcon": "assets/icon.ico"
     }

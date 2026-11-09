@@ -7,7 +7,7 @@ import { createRequire } from "node:module";
 // Optional external integration: the adapted user extension is not shipped here.
 const require = createRequire(import.meta.url);
 const { requireDirectory } = require("./integration-prerequisites");
-const extensionRoot = requireDirectory("PI_WEB_LAUNCHER_SUBAGENT_PATH");
+const extensionRoot = requireDirectory("PI_LAUNCHER_SUBAGENT_PATH");
 const { parentToolMode, stricterMode, assertDispatchAllowed, childPolicy } = await import(pathToFileURL(path.join(extensionRoot, "policy.ts")).href);
 const plan = ["read", "grep", "find", "ls"];
 const build = ["read", "bash", "edit", "write"];

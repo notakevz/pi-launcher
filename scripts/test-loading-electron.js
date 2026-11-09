@@ -35,7 +35,7 @@ async function main() {
       scripts: document.scripts.length, background: getComputedStyle(document.body).backgroundColor,
       fakePercentage: document.querySelector('[role="progressbar"]').hasAttribute('aria-valuenow'),
     })`)
-    assert.equal(info.title, "Pi Web Launcher")
+    assert.equal(info.title, "Pi Launcher")
     assert.equal(info.phase, "environment")
     assert.equal(info.overflow, false)
     assert.equal(info.icons, true)

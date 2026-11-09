@@ -85,7 +85,7 @@ async function publishRelease({ github, context, core, directory, version }) {
     await github.rest.git.createRef({ ...repository, ref: `refs/tags/${tag}`, sha: context.sha })
     const { data: draft } = await github.rest.repos.createRelease({
       ...repository, tag_name: tag, target_commitish: context.sha,
-      name: `Pi Web Launcher ${tag}`, body, draft: true,
+      name: `Pi Launcher ${tag}`, body, draft: true,
       prerelease: version.split("+")[0].includes("-"),
     })
     for (const { name, data } of artifacts) {

@@ -21,9 +21,9 @@
 
 ## 产品命名
 
-对外名称统一为 **Pi Web Launcher**；安装程序、EXE、快捷方式、窗口、托盘和启动页均使用同名。
-Windows 应用 ID 为 `local.pi.web.launcher`，默认数据目录为 `%APPDATA%\Pi Web Launcher`，
-所有启动器专用环境变量使用 `PI_WEB_LAUNCHER_` 前缀。0.0.1 不提供旧名称别名或自动迁移；
+对外名称统一为 **Pi Launcher**；安装程序、EXE、快捷方式、窗口、托盘和启动页均使用同名。
+Windows 应用 ID 为 `local.pi.launcher`，默认数据目录为 `%APPDATA%\Pi Launcher`，
+所有启动器专用环境变量使用 `PI_LAUNCHER_` 前缀。0.0.1 不读取旧版启动器环境变量，不提供旧名称别名或自动迁移；
 不要自动移动或删除用户机器上的其他配置目录。Pi SDK 自身的变量和数据目录不属于此次命名范围。
 
 ## 两种后端的边界
@@ -76,7 +76,7 @@ GitHub Actions 的 Node/OS 矩阵只覆盖这一层，不是安装包或真实�
 | `npm run backend:check -- --verify` | 对带构建清单的产物执行显式完整性校验 |
 
 集成脚本不能默认读取真实用户扩展和会话。用户 JSON 的存在不替代集成测试要求的显式
-`PI_WEB_LAUNCHER_BACKEND_PATH` 等输入。缺少前置条件就说明未运行，不虚报通过。
+`PI_LAUNCHER_BACKEND_PATH` 等输入。缺少前置条件就说明未运行，不虚报通过。
 纯启动器维护不需要运行可选子代理测试，不要索取或复制用户的全部 agent 目录。
 
 ## 构建与发布

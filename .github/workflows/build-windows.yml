@@ -59,7 +59,7 @@ jobs:
       - name: Upload installer and checksums
         uses: actions/upload-artifact@v4
         with:
-          name: pi-web-launcher-windows-x64
+          name: pi-launcher-windows-x64
           path: |
             dist/*.exe
             dist/SHA256SUMS.txt
@@ -76,7 +76,7 @@ jobs:
     permissions:
       contents: write
     concurrency:
-      group: pi-web-launcher-release
+      group: pi-launcher-release
       cancel-in-progress: false
     steps:
       - name: Check out the built source commit
@@ -88,7 +88,7 @@ jobs:
       - name: Download this run's installer and checksums
         uses: actions/download-artifact@v4
         with:
-          name: pi-web-launcher-windows-x64
+          name: pi-launcher-windows-x64
           path: dist
 
       - name: Publish a new version without overwriting existing releases
@@ -103,5 +103,5 @@ jobs:
             })
             await core.summary
               .addHeading('Release published')
-              .addLink('Download Pi Web Launcher', release.html_url)
+              .addLink('Download Pi Launcher', release.html_url)
               .write()

@@ -27,7 +27,7 @@ async function readLauncherConfig(stateDir, env = process.env, { home = os.homed
   const variables = { backendPath: "BACKEND_PATH", cwd: "CWD", port: "PORT", nodePath: "NODE",
     proxyUrl: "PROXY_URL", noProxy: "NO_PROXY", startupTimeoutMs: "STARTUP_TIMEOUT_MS" }
   for (const [key, suffix] of Object.entries(variables)) {
-    const value = env[`PI_WEB_LAUNCHER_${suffix}`]
+    const value = env[`PI_LAUNCHER_${suffix}`]
     if (value !== undefined) config[key] = key === "noProxy" ? value.split(",").map(s => s.trim()).filter(Boolean)
       : ["port", "startupTimeoutMs"].includes(key) ? (value.trim() ? Number(value) : NaN) : value
   }
@@ -40,8 +40,8 @@ async function readLauncherConfig(stateDir, env = process.env, { home = os.homed
     config[key] = path.resolve(value)
   }
   if (!fs.statSync(config.cwd, { throwIfNoEntry: false })?.isDirectory()) throw new Error(`工作目录 cwd 不存在：${config.cwd}`)
-  if (config.nodePath !== null && !fs.statSync(config.nodePath, { throwIfNoEntry: false })?.isFile()) throw new Error(`nodePath / PI_WEB_LAUNCHER_NODE 不存在或不是文件：${config.nodePath}`)
-  if (!Number.isInteger(config.port) || config.port < 1 || config.port > 65535) throw new Error("port / PI_WEB_LAUNCHER_PORT 必须是 1–65535 的整数。")
+  if (config.nodePath !== null && !fs.statSync(config.nodePath, { throwIfNoEntry: false })?.isFile()) throw new Error(`nodePath / PI_LAUNCHER_NODE 不存在或不是文件：${config.nodePath}`)
+  if (!Number.isInteger(config.port) || config.port < 1 || config.port > 65535) throw new Error("port / PI_LAUNCHER_PORT 必须是 1–65535 的整数。")
   if (!Number.isInteger(config.startupTimeoutMs) || config.startupTimeoutMs < 1 || config.startupTimeoutMs > 2147483647) throw new Error("startupTimeoutMs 必须是 1–2147483647 的整数毫秒。")
   validateProxyUrl(config.proxyUrl)
   if (!Array.isArray(config.noProxy) || config.noProxy.some(value => typeof value !== "string" || /[\r\n,]/.test(value))) throw new Error("noProxy 必须是字符串数组，每项为单个地址或域名。")
@@ -49,7 +49,7 @@ async function readLauncherConfig(stateDir, env = process.env, { home = os.homed
 }
 
 function requireBackendPath(root) {
-  if (!root) throw new Error("未配置 backendPath。请将 launcher-config.json 的 backendPath 或 PI_WEB_LAUNCHER_BACKEND_PATH 设置为 Pi Web 的 npm 安装目录或本地构建产物目录。启动器不会自动下载。")
+  if (!root) throw new Error("未配置 backendPath。请将 launcher-config.json 的 backendPath 或 PI_LAUNCHER_BACKEND_PATH 设置为 Pi Web 的 npm 安装目录或本地构建产物目录。启动器不会自动下载。")
   return root
 }
 
@@ -88,7 +88,7 @@ async function inspectBackend(root) {
     return { root, entry: path.join(root, "bin", "pi-web.js"), version: pkg.version, commit,
       label: `${pkg.version}${commit ? ` @ ${commit.slice(0, 12)}` : ""}` }
   } catch (error) {
-    throw new Error(`本地 Pi Web 后端不完整或无效：${root}\n${error.message}\n请检查 npm 安装目录或本地构建产物，并设置 PI_WEB_LAUNCHER_BACKEND_PATH / launcher-config.json 的 backendPath。启动器不会自动下载或修复。`)
+    throw new Error(`本地 Pi Web 后端不完整或无效：${root}\n${error.message}\n请检查 npm 安装目录或本地构建产物，并设置 PI_LAUNCHER_BACKEND_PATH / launcher-config.json 的 backendPath。启动器不会自动下载或修复。`)
   }
 }
 

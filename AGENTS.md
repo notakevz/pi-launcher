@@ -1,4 +1,4 @@
-# Pi Web Launcher — instructions for AI assistants
+# Pi Launcher — instructions for AI assistants
 
 本文件面向协助用户部署、维护和开发的 AI。普通用户入口是 [README.md](README.md)。
 **README 只写产品用途、安装、配置和日常使用，不写测试命令、验收报告或内部实现细节。**
@@ -22,12 +22,12 @@
 4. **网络按本机实际情况配置。** 检查已有代理配置，不能确定时询问用户；不要猜测端口，
    不关闭 TLS 校验。安装/构建终端的网络和应用运行时的 JSON 代理设置是两件事。
    后端回环访问直连。应用配置不会修改 Windows 系统代理，也不会改变外部已运行服务的环境。
-5. **个人设置写用户 JSON。** 配置路径为 `%APPDATA%\Pi Web Launcher\launcher-config.json`；
-   若设置 `PI_WEB_LAUNCHER_DATA_DIR` 则用该目录。不要把本机路径、凭据或代理账号写进源码默认值。
+5. **个人设置写用户 JSON。** 配置路径为 `%APPDATA%\Pi Launcher\launcher-config.json`；
+   若设置 `PI_LAUNCHER_DATA_DIR` 则用该目录。不要把本机路径、凭据或代理账号写进源码默认值。
    使用 UTF-8 无 BOM 写入标准 JSON；已有文件先读取比较，覆盖前取得用户确认。
 6. **检查路径和覆盖优先级。** `backendPath` 指向 npm 包根目录或 fork 的完整运行产物，
    不是 Git checkout、全局 npm root 或 CLI 文件。`cwd` 必须存在，Node 路径可自动发现。
-   专用环境变量会覆盖 JSON；排除旧环境变量导致的误配置。
+   `PI_LAUNCHER_` 专用环境变量会覆盖 JSON；旧版启动器环境变量不再读取。
 7. **保护已有环境。** 不清空凭据、会话、Electron 存储或 npm 缓存，不全局结束 Node。
    停止已有服务、覆盖配置、迁移数据或修改系统级设置前必须征得同意。
    端口优先用配置默认值；发生冲突先确认所有者，不误杀无关程序。
@@ -46,10 +46,10 @@
 - Keep startup separate from installation and updates. Never silently download, replace or select a different backend.
 - Do not modify the backend repository as part of launcher changes without a separate task basis.
 - Limited Pi tool modes are backend features, not an OS sandbox implemented by this launcher.
-- Use one product identity: Pi Web Launcher, application ID `local.pi.web.launcher`, data directory `Pi Web Launcher`.
+- Use one product identity: Pi Launcher, application ID `local.pi.launcher`, data directory `Pi Launcher`.
 - Version 0.0.1 has no legacy-name aliases, fallback directories or automatic migration. Do not move or delete existing user data.
 - Runtime configuration lives in JSON; keep safe defaults in `config/` and personal settings outside source.
-- Launcher-specific environment variables use only `PI_WEB_LAUNCHER_`. Do not log proxy credentials or model secrets.
+- Launcher-specific environment variables use only `PI_LAUNCHER_`. Do not log proxy credentials or model secrets.
 - Never commit credentials, sessions, logs, backend artifacts, thumbnail caches or real user configuration.
 - Only stop a backend whose process identity and ownership have been verified; never stop external services by guessing.
 - Release publishing is opt-in on manual builds only. Keep build permissions read-only and restrict `contents: write` to the conditional release job.

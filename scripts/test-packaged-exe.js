@@ -10,8 +10,8 @@ const { inspectProcess, stopProcessTree } = require("../src/process-tools")
 
 async function main() {
   const backendRoot = require("./integration-prerequisites").integrationBackend()
-  const exe = path.resolve(__dirname, "../dist/win-unpacked/Pi Web Launcher.exe")
-  assert.ok(fs.existsSync(exe), "Integration prerequisite: build dist/win-unpacked/Pi Web Launcher.exe first")
+  const exe = path.resolve(__dirname, "../dist/win-unpacked/Pi Launcher.exe")
+  assert.ok(fs.existsSync(exe), "Integration prerequisite: build dist/win-unpacked/Pi Launcher.exe first")
   const resources = path.join(path.dirname(exe), "resources")
   assert.ok(!fs.existsSync(path.join(resources, "source-backend")), "No backend may be bundled")
   const archiveFiles = require("@electron/asar").listPackage(path.join(resources, "app.asar"))
@@ -19,15 +19,15 @@ async function main() {
   assert.ok(archiveFiles.some(file => file.endsWith("loading.html")), "The offline loading page must ship")
   const spec = await inspectBackend(backendRoot)
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), "pi-entry-exe-"))
-  const workspace = path.join(temp, "workspace"), state = path.join(temp, "Pi Web Launcher")
+  const workspace = path.join(temp, "workspace"), state = path.join(temp, "Pi Launcher")
   fs.mkdirSync(workspace)
-  const env = { ...process.env, PI_WEB_LAUNCHER_DATA_DIR: state, PI_WEB_LAUNCHER_CWD: workspace,
-    PI_WEB_LAUNCHER_PORT: "30148", PI_CODING_AGENT_DIR: path.join(temp, "agent"),
-    PI_WEB_LAUNCHER_PROXY_URL: "http://127.0.0.1:9", PI_OFFLINE: "1" }
+  const env = { ...process.env, PI_LAUNCHER_DATA_DIR: state, PI_LAUNCHER_CWD: workspace,
+    PI_LAUNCHER_PORT: "30148", PI_CODING_AGENT_DIR: path.join(temp, "agent"),
+    PI_LAUNCHER_PROXY_URL: "http://127.0.0.1:9", PI_OFFLINE: "1" }
   delete env.ELECTRON_RUN_AS_NODE
   fs.mkdirSync(state)
   fs.writeFileSync(path.join(state, "launcher-config.json"), JSON.stringify({ backendPath: spec.root }), "utf8")
-  delete env.PI_WEB_LAUNCHER_BACKEND_PATH // Verify the isolated persistent JSON path, not a machine default.
+  delete env.PI_LAUNCHER_BACKEND_PATH // Verify the isolated persistent JSON path, not a machine default.
   let child, identity
   try {
     assert.ok(await isPortFree(30148), "Refusing to touch occupied port 30148")
@@ -42,7 +42,7 @@ async function main() {
       if (child.exitCode !== null) throw new Error(`Packaged EXE exited early: ${child.exitCode}`)
       if (await checkServer("http://127.0.0.1:30148")) {
         const logFile = path.join(state, "launcher.log")
-        if (fs.existsSync(logFile) && fs.readFileSync(logFile, "utf8").includes("Pi Web Launcher ready at")) { ready = true; break }
+        if (fs.existsSync(logFile) && fs.readFileSync(logFile, "utf8").includes("Pi Launcher ready at")) { ready = true; break }
       }
       await delay(250)
     }

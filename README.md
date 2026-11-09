@@ -1,6 +1,6 @@
-# Pi Web Launcher
+# Pi Launcher
 
-[GitHub](https://github.com/notakevz/pi-web-launcher) · [MIT](LICENSE)
+[GitHub](https://github.com/notakevz/pi-launcher) · [MIT](LICENSE)
 
 Pi Web 的 Windows 启动器：负责启动和管理 Pi Web 后端进程，并提供独立窗口。
 关闭窗口会隐藏到托盘，再次打开会唤回窗口。
@@ -20,7 +20,7 @@ Pi Web 的 Windows 启动器：负责启动和管理 Pi Web 后端进程，并�
 
 ## 1. 准备启动器
 
-下载安装包：打开 [Releases](https://github.com/notakevz/pi-web-launcher/releases)，
+下载安装包：打开 [Releases](https://github.com/notakevz/pi-launcher/releases)，
 在已发布版本的 **Assets** 中下载 EXE 并安装，不要把 Source code 压缩包当作安装包。
 Release 附件无需登录，长期有效。安装包未签名，Windows 可能显示 SmartScreen 提醒。
 如果 Releases 还没有可用的安装包，可请维护者构建发布，或先用源码方式。
@@ -28,8 +28,8 @@ Release 附件无需登录，长期有效。安装包未签名，Windows 可能�
 也可以从源码运行，fork 路线和参与开发时需要：
 
 ```powershell
-git clone https://github.com/notakevz/pi-web-launcher.git
-cd pi-web-launcher
+git clone https://github.com/notakevz/pi-launcher.git
+cd pi-launcher
 npm ci
 ```
 
@@ -80,9 +80,9 @@ $backendPath = (Resolve-Path './release/backend').Path
 if (!$backendPath -or !(Test-Path -LiteralPath $backendPath -PathType Container)) {
     throw '请先完成上面的后端安装或构建，再写入配置。'
 }
-$configDir = if ($env:PI_WEB_LAUNCHER_DATA_DIR) {
-    [IO.Path]::GetFullPath($env:PI_WEB_LAUNCHER_DATA_DIR)
-} else { Join-Path $env:APPDATA 'Pi Web Launcher' }
+$configDir = if ($env:PI_LAUNCHER_DATA_DIR) {
+    [IO.Path]::GetFullPath($env:PI_LAUNCHER_DATA_DIR)
+} else { Join-Path $env:APPDATA 'Pi Launcher' }
 $configFile = Join-Path $configDir 'launcher-config.json'
 New-Item -ItemType Directory -Force -Path $configDir | Out-Null
 if (!(Test-Path -LiteralPath $configFile)) {
@@ -93,8 +93,10 @@ Write-Host "本次选择的后端目录：$backendPath"
 notepad $configFile
 ```
 
-配置文件默认位于 `%APPDATA%\Pi Web Launcher\launcher-config.json`。
-设置过 `PI_WEB_LAUNCHER_DATA_DIR` 时，上面的命令与应用都会使用该自定义目录。
+配置文件默认位于 `%APPDATA%\Pi Launcher\launcher-config.json`。
+设置过 `PI_LAUNCHER_DATA_DIR` 时，上面的命令与应用都会使用该自定义目录。
+旧名称下的配置不会自动迁移，旧版启动器环境变量不再读取；原有用户数据保持不变，
+如需沿用旧配置，请先自行核对，再手动复制到新配置目录。
 如果已有配置，切换后端时只需把 `backendPath` 改为上面打印的目录。
 `cwd` 是默认工作目录，可以改为你实际使用的项目目录。
 
@@ -113,7 +115,7 @@ notepad $configFile
 npm start
 ```
 
-已安装客户端的用户，直接打开桌面或开始菜单中的 Pi Web Launcher。
+已安装客户端的用户，直接打开桌面或开始菜单中的 Pi Launcher。
 第一次使用时，在 Pi Web 的 Models 面板中登录模型提供方或配置 API Key。
 启动成功后浏览器会自动打开 http://127.0.0.1:30141，改过端口的话地址跟着变化。
 
@@ -133,7 +135,7 @@ npm start
 
 ## 数据与清理
 
-- 启动器自己的数据（配置、日志、进程记录）都在 `%APPDATA%\Pi Web Launcher`；
+- 启动器自己的数据（配置、日志、进程记录）都在 `%APPDATA%\Pi Launcher`；
   删除整个目录即可重置启动器，下次启动会重新生成。
 - 卸载程序不会删除该目录，需要手动清理。
 - 模型账号、会话和 Pi 的配置在 Pi 的用户目录（默认 `%USERPROFILE%\.pi`，

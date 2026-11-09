@@ -9,11 +9,13 @@
 | --- | --- |
 | [`launcher-defaults.json`](launcher-defaults.json) | 随应用打包的安全默认值，一般不需要修改 |
 | [`launcher-config.example.json`](launcher-config.example.json) | 完整的个人配置模板；其中路径只是示例，必须按本机情况修改 |
-| `%APPDATA%\Pi Web Launcher\launcher-config.json` | 应用实际读取的个人配置，不提交到 Git |
+| `%APPDATA%\Pi Launcher\launcher-config.json` | 应用实际读取的个人配置，不提交到 Git |
 | [`backend-build.json`](backend-build.json) | 手动构建后端时的通用参数，不是应用运行配置 |
 
-用户数据目录为 **Pi Web Launcher**。
-如果显式设置了 `PI_WEB_LAUNCHER_DATA_DIR`，应用改读该目录中的 `launcher-config.json`。
+用户数据目录为 **Pi Launcher**。
+如果显式设置了 `PI_LAUNCHER_DATA_DIR`，应用改读该目录中的 `launcher-config.json`。
+旧名称下的配置不会自动迁移，旧版启动器环境变量不再读取；应用不会移动或删除原有用户数据。
+如需沿用旧配置，请先自行核对，再手动复制到新配置目录。
 仅修改仓库里的 `.example.json` 不会改变实际运行设置。
 
 ## 第一次配置
@@ -26,9 +28,9 @@
 **以下 PowerShell 在启动器源码根目录执行，不覆盖已有配置：**
 
 ```powershell
-$configDir = if ($env:PI_WEB_LAUNCHER_DATA_DIR) {
-    [IO.Path]::GetFullPath($env:PI_WEB_LAUNCHER_DATA_DIR)
-} else { Join-Path $env:APPDATA 'Pi Web Launcher' }
+$configDir = if ($env:PI_LAUNCHER_DATA_DIR) {
+    [IO.Path]::GetFullPath($env:PI_LAUNCHER_DATA_DIR)
+} else { Join-Path $env:APPDATA 'Pi Launcher' }
 $configFile = Join-Path $configDir 'launcher-config.json'
 New-Item -ItemType Directory -Force -Path $configDir | Out-Null
 if (Test-Path -LiteralPath $configFile) {
@@ -118,17 +120,17 @@ notepad $configFile
 ## 环境变量覆盖与代理边界
 
 逐字段优先级：**专用环境变量 → 用户 JSON → 通用默认 JSON**。
-JSON 改了不生效时，先检查是否存在对应的旧环境变量。
+JSON 改了不生效时，先检查是否存在对应的 `PI_LAUNCHER_` 环境变量覆盖。
 
 | JSON 字段 | 临时覆盖变量 |
 | --- | --- |
-| `backendPath` | `PI_WEB_LAUNCHER_BACKEND_PATH` |
-| `cwd` | `PI_WEB_LAUNCHER_CWD` |
-| `port` | `PI_WEB_LAUNCHER_PORT` |
-| `nodePath` | `PI_WEB_LAUNCHER_NODE` |
-| `proxyUrl` | `PI_WEB_LAUNCHER_PROXY_URL` |
-| `noProxy` | `PI_WEB_LAUNCHER_NO_PROXY`，使用逗号分隔 |
-| `startupTimeoutMs` | `PI_WEB_LAUNCHER_STARTUP_TIMEOUT_MS` |
+| `backendPath` | `PI_LAUNCHER_BACKEND_PATH` |
+| `cwd` | `PI_LAUNCHER_CWD` |
+| `port` | `PI_LAUNCHER_PORT` |
+| `nodePath` | `PI_LAUNCHER_NODE` |
+| `proxyUrl` | `PI_LAUNCHER_PROXY_URL` |
+| `noProxy` | `PI_LAUNCHER_NO_PROXY`，使用逗号分隔 |
+| `startupTimeoutMs` | `PI_LAUNCHER_STARTUP_TIMEOUT_MS` |
 
 `proxyUrl: null` 时，HTTP(S) 代理按 `HTTPS_PROXY`、`https_proxy`、`HTTP_PROXY`、
 `http_proxy` 的顺序选取。没有这些变量时，对应 HTTP(S) 请求直连。
