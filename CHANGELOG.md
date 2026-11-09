@@ -1,6 +1,12 @@
 # Changelog
 
-## 0.0.1 — initial public snapshot (unreleased)
+## 0.0.2 (unreleased)
+
+- Rename the product and repository to Pi Launcher / pi-launcher, with application ID `local.pi.launcher`, data directory `Pi Launcher` and environment prefix `PI_LAUNCHER_`.
+- Add a tray action to open the active configuration directory, including custom data directories.
+- Keep existing user data untouched; no automatic migration or legacy environment-variable fallback.
+
+## 0.0.1 — initial public snapshot
 
 - Prepare Pi Launcher as a standalone project and start public versioning at 0.0.1.
 - Use Pi Launcher consistently for the app, installer, shortcuts and user-data directory, with application ID `local.pi.launcher` and environment prefix `PI_LAUNCHER_`; no legacy-name compatibility or automatic data migration.

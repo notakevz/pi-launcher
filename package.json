@@ -1,6 +1,6 @@
 {
   "name": "pi-launcher",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "license": "MIT",
   "description": "Windows desktop launcher for an npm-installed or locally built Pi Web backend.",

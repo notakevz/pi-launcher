@@ -78,7 +78,10 @@ test("NSIS uses a stable no-space installer name so source artifacts and release
   assert.equal(pkg.build.productName, "Pi Launcher")
   assert.equal(pkg.build.nsis.shortcutName, "Pi Launcher")
   assert.equal(pkg.build.nsis.artifactName, "pi-launcher-${version}-${arch}-setup.${ext}")
-  assert.equal(pkg.build.nsis.artifactName.replace("${version}", pkg.version).replace("${arch}", "x64").replace("${ext}", "exe"), "pi-launcher-0.0.1-x64-setup.exe")
+  assert.equal(pkg.build.nsis.artifactName.replace("${version}", pkg.version).replace("${arch}", "x64").replace("${ext}", "exe"), `pi-launcher-${pkg.version}-x64-setup.exe`)
+  const lock = require("../package-lock.json")
+  assert.equal(lock.version, pkg.version)
+  assert.equal(lock.packages[""].version, pkg.version)
 })
 
 test("validates CRLF checksums, atomically tags the source SHA, uploads buffers, then publishes", async t => {
