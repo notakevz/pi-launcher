@@ -141,6 +141,7 @@ function createTrayMenu() {
       { label: "100%", accelerator: "Ctrl+0", click: () => setZoom(1) },
       { label: "125%", click: () => setZoom(1.25) },
     ] },
+    { label: "打开配置文件目录", click: () => shell.openPath(USER_DATA_DIR) },
     { label: "打开日志目录", click: () => shell.openPath(USER_DATA_DIR) },
     { type: "separator" },
     { label: "退出", click: () => app.quit() },

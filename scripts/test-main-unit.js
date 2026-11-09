@@ -6,6 +6,7 @@ const Module = require("node:module")
 const os = require("node:os")
 const path = require("node:path")
 const { test } = require("node:test")
+const vm = require("node:vm")
 const { readLauncherConfig } = require("../src/local-backend")
 const { resolveRuntime, serverEnvironment } = require("../src/backend")
 
@@ -59,6 +60,48 @@ test("Pi Launcher identity and data paths match packaging and the loading page",
   const loading = fs.readFileSync(path.join(__dirname, "../assets/loading.html"), "utf8")
   assert.match(loading, /<title>Pi Launcher<\/title>/)
   assert.match(loading, /class="brand-name">Pi Launcher<\/span>/)
+})
+
+test("tray opens the active configuration directory for default and custom data paths", async t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "pi-launcher-tray-"))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  const source = fs.readFileSync(path.join(__dirname, "../src/main.js"), "utf8")
+  const appData = path.join(root, "app-data")
+  for (const override of [undefined, path.join(root, "custom data")]) {
+    let menu, backendState
+    const opened = []
+    const app = {
+      getPath: () => appData, setName() {}, setPath() {}, setAppUserModelId() {},
+      requestSingleInstanceLock: () => false, quit() {},
+    }
+    class Tray extends EventEmitter {
+      setToolTip() {}
+      setContextMenu(value) { menu = value }
+    }
+    class Backend { constructor({ stateDir }) { backendState = stateDir } }
+    const electron = {
+      app, Tray, Menu: { buildFromTemplate: value => value },
+      shell: { openPath: async directory => { opened.push(directory); return "" } },
+    }
+    vm.runInNewContext(`${source}\ncreateTray()`, {
+      require(name) {
+        if (name === "electron") return electron
+        if (name === "./backend") return { PiBackend: Backend }
+        return require(name)
+      },
+      __dirname: path.join(__dirname, "../src"),
+      process: { env: override ? { PI_LAUNCHER_DATA_DIR: override } : {} },
+    })
+    const expected = override || path.join(appData, "Pi Launcher")
+    assert.equal(backendState, expected)
+    const item = menu.find(item => item.label === "打开配置文件目录")
+    assert.ok(item, "configuration directory action is present in the tray menu")
+    await item.click()
+    assert.deepEqual(opened, [expected])
+    await menu.find(item => item.label === "打开日志目录").click()
+    assert.deepEqual(opened, [expected, expected], "existing log directory action is preserved")
+    assert.deepEqual(fs.readdirSync(root), [], "opening directories does not create or overwrite configuration")
+  }
 })
 
 test("only the new launcher environment prefix configures runtime fields, Node, npm and proxies", async t => {
