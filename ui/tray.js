@@ -34,7 +34,6 @@
     }
     setText("endpoint", state.endpoint || "等待连接");
     setText("version", state.version || "");
-    setText("zoom-value", Math.round((state.zoom || 1) * 100) + "%");
     var browser = document.getElementById("action-browser");
     var copy = document.getElementById("action-copy");
     if (browser) browser.disabled = !ready;
@@ -48,9 +47,10 @@
     if (autostart) {
       autostart.disabled = !known;
       autostart.setAttribute("aria-checked", known ? String(startup.enabled) : "mixed");
+      autostart.title = startup.error || (known ? (startup.enabled ? "关闭开机自启" : "开启开机自启") : "无法确认开机自启状态，请重新打开菜单。");
     }
-    setText("autostart-value", known ? (startup.enabled ? "已开启" : "已关闭") : "状态未知");
-    setText("autostart-status", startup.error || (known ? "登录 Windows 时启动，显示主窗口。" : "无法确认登录自启状态，请重新打开菜单。"));
+    // No visible footnote. Keep failures available in the tooltip/live region.
+    setText("autostart-status", startup.error || (known ? "" : "无法确认开机自启状态，请重新打开菜单。"));
   };
 
   document.addEventListener("click", function (event) {
@@ -66,7 +66,8 @@
       if (!send(target.dataset.action)) {
         startupLastClick = -Infinity;
         target.disabled = false;
-        setText("autostart-status", "无法发送自启设置请求，请重新打开菜单。");
+        target.title = "无法发送自启设置请求，请重新打开菜单。";
+        setText("autostart-status", target.title);
       }
     } else {
       send(target.dataset.action);

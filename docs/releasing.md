@@ -1,4 +1,4 @@
-# Windows 构建与发布清单（Tauri 0.1.0）
+# Windows 构建与发布清单（Tauri 0.1.1）
 
 面向维护者/AI。先读 [AGENTS](../AGENTS.md) 和 [维护说明](ai-maintenance.md)。
 普通用户安装见 [README](../README.md)。以下是待执行清单，不是新安装器已通过验收的声明。
@@ -14,7 +14,7 @@ Electron browser local storage/profile 不保证迁移到 WebView2，不能承�
 ## 1. 源码与工具检查
 
 - [ ] 源码无个人配置、凭据、会话、日志、后端产物、浏览器 profile、缓存或真实用户路径。
-- [ ] `LICENSE`、图标署名、`THIRD_PARTY_NOTICES.md` 保留；Tauri bundle 携带两份许可/通知资源。
+- [ ] `LICENSE`、图标署名、`THIRD_PARTY_NOTICES.md` 保留；Tauri bundle 携带主许可、第三方通知及 `LICENSE-TAURI-MIT`。
 - [ ] package、npm lock 两个根版本、Cargo package/lock 中本包版本、Tauri 显式版本全部为目标版本；不要无故重写 Cargo.lock。
 - [ ] 原生 Windows 10/11 x64；Node >=22.19、npm、Git、Rust stable >=1.90、MSVC C++ Build Tools / Windows SDK、WebView2 Runtime。
 - [ ] 仓库/终端网络正确，不关闭 TLS，不提交本机 Cargo 镜像或代理认证。
@@ -86,7 +86,7 @@ build 实际命令：`tauri build --ci --no-sign --bundles nsis -- --locked`，�
 
 本地唯一交付目录使用 Tauri 默认的 `src-tauri/target/release/bundle/nsis/`：
 
-- `Pi Launcher_0.1.0_x64-setup.exe`：保留 Tauri 原生文件名，同版本重打包覆盖旧包。
+- `Pi Launcher_0.1.1_x64-setup.exe`：保留 Tauri 原生文件名，同版本重打包覆盖旧包。
 - `SHA256SUMS.txt`：`npm run stage:installer` 原地验证当前版本/架构/产品名、MZ 签名并更新校验和，不复制 EXE、不创建 dist。
 
 仅 GitHub Actions 发布时，显式传入 `--release-output <runner.temp>/pi-launcher-release`，
@@ -105,6 +105,7 @@ build 实际命令：`tauri build --ci --no-sign --bundles nsis -- --locked`，�
 ### 自动 Source checks
 
 push/PR 执行 Windows Node 工具检查及 Rust fmt/test/clippy，Node 22 缓存 npm，Rust stable MSVC 与 Cargo cache。
+官方 Actions 已升级为 Node 24 运行时版本；这与项目使用的 Node 22 工具链相互独立。
 不构建安装器，不触发发布，不调用模型。工作流存在不代表检查已执行。
 
 ### 手动 Build Windows（默认仅附件）
@@ -126,7 +127,7 @@ push/PR 执行 Windows Node 工具检查及 Rust fmt/test/clippy，Node 22 缓�
 
 1. 检出与 build 相同的固定 SHA，下载本次 run 的附件，不重新构建。
 2. `publish-release.js` 校验纯文件/非 symlink、ASCII 白名单与 EXE 哈希，缓存已校验字节后上传。
-3. 从该 SHA 的 package version 生成 `v0.1.0`，完整分页查询所有 Release（含未打标签的草稿）。
+3. 从该 SHA 的 package version 生成 `v0.1.1`，完整分页查询所有 Release（含未打标签的草稿）。
    已有同名 tag 或 Release 就停止，即使 tag 指向同一 SHA；API 查询失败不当作不存在。
 4. 原子创建指向构建 SHA 的 tag，再建草稿；上传 EXE/校验文件并检查服务端实际文件名一致后才公开。
    prerelease 标记按版本识别，body 顶部含强制手动卸载/安装及数据保留警告。

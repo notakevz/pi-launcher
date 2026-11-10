@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.1 — Tray and documentation polish
+
+- Remove zoom controls from the tray menu; retain main-window keyboard zoom.
+- Show login startup as a right-aligned switch without a visible explanatory footnote. Startup remains opt-in and disabled by default; preserve a user's previously enabled registration and report failures through the tooltip/accessibility status.
+- Reduce the tray window height and fit the card to its contents instead of leaving empty space below Quit.
+- Correct README configuration examples for custom data directories and existing settings; clarify safe Electron migration and backend build recovery.
+- Update official GitHub Actions to Node 24-runtime releases while retaining Node 22 for project checks/builds. Keep manual packaging and opt-in publication, deriving installer/tag versions from synchronized application metadata.
+
+These are source changes; Windows tray appearance and installer acceptance still require desktop verification.
+
 ## 0.1.0 — Tauri / WebView2 migration
 
 ### 必须手动卸载旧客户端 / REQUIRED migration

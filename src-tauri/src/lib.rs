@@ -478,7 +478,7 @@ fn ensure_tray_menu_window(app: &AppHandle) -> bool {
     let built = WebviewWindowBuilder::new(app, TRAY_WINDOW, WebviewUrl::App("tray.html".into()))
         .title(APP_NAME)
         .data_directory(webview_dir)
-        .inner_size(316.0, 520.0)
+        .inner_size(316.0, 404.0)
         .resizable(false)
         .decorations(false)
         .transparent(true)
@@ -545,7 +545,6 @@ fn update_tray_state(app: &AppHandle) {
         ),
         None => (false, "等待连接".to_string(), String::new(), String::new()),
     };
-    let zoom = *lock(&context.zoom);
     let autostart = lock(&context.autostart).clone();
     let payload = serde_json::json!({
         "autostart": autostart,
@@ -553,7 +552,6 @@ fn update_tray_state(app: &AppHandle) {
         "endpoint": endpoint,
         "version": version,
         "label": label,
-        "zoom": zoom,
     });
     let script = format!("if (window.__setTrayState) window.__setTrayState({payload});");
     if let Some(window) = app.get_webview_window(TRAY_WINDOW) {
@@ -668,8 +666,8 @@ fn hide_tray_menu(app: &AppHandle, context: &Context) {
 }
 
 fn handle_tray_action(app: &AppHandle, context: &Context, action: &str) {
-    // Zoom and login-startup controls keep the menu open for state feedback.
-    let keep_open = action.starts_with("zoom-") || action == "autostart-toggle";
+    // Keep the login-startup switch open for verified state feedback.
+    let keep_open = action == "autostart-toggle";
     if !keep_open {
         hide_tray_menu(app, context);
     }
@@ -687,10 +685,6 @@ fn handle_tray_action(app: &AppHandle, context: &Context, action: &str) {
                 copy_server_url(app, context, &url);
             }
         }
-        "zoom-in" => apply_zoom(app, context, "in"),
-        "zoom-out" => apply_zoom(app, context, "out"),
-        "zoom-reset" => apply_zoom(app, context, "reset"),
-        "zoom-125" => apply_zoom(app, context, "125"),
         "config-dir" | "log-dir" => {
             queue_open(
                 context,
@@ -712,8 +706,7 @@ fn handle_tray_action(app: &AppHandle, context: &Context, action: &str) {
 }
 
 fn apply_zoom(app: &AppHandle, context: &Context, action: &str) {
-    // Scope the lock: update_tray_state reads `zoom` again, and re-locking the
-    // same std::sync::Mutex on this thread would deadlock the UI.
+    // Keyboard zoom remains scoped to the main window, not the tray menu.
     let zoom = {
         let mut current = lock(&context.zoom);
         let next = match action {
@@ -729,7 +722,6 @@ fn apply_zoom(app: &AppHandle, context: &Context, action: &str) {
     if let Some(window) = app.get_webview_window("main") {
         let _ = window.set_zoom(zoom);
     }
-    update_tray_state(app);
 }
 
 fn show_app_window(app: &AppHandle) {

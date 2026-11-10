@@ -34,7 +34,8 @@ for (const enabled of [false, true]) test(`autostart renders the actual ${enable
   f.window.__setTrayState({ ready: true, autostart: { enabled, error: null } })
   assert.equal(f.element("action-autostart").disabled, false)
   assert.equal(f.element("action-autostart").attributes["aria-checked"], String(enabled))
-  assert.equal(f.element("autostart-value").textContent, enabled ? "已开启" : "已关闭")
+  assert.equal(f.element("action-autostart").title, enabled ? "关闭开机自启" : "开启开机自启")
+  assert.equal(f.element("autostart-status").textContent, "", "no explanatory footnote")
   assert.equal(f.opened.length, 0, "state rendering must never register startup")
 })
 
@@ -44,13 +45,26 @@ test("unknown or absent autostart state is not presented as disabled or clickabl
     f.window.__setTrayState(state)
     assert.equal(f.element("action-autostart").disabled, true)
     assert.equal(f.element("action-autostart").attributes["aria-checked"], "mixed")
-    assert.equal(f.element("autostart-value").textContent, "状态未知")
+    assert.ok(f.element("action-autostart").title)
+    assert.notEqual(f.element("action-autostart").title, "开启开机自启")
   }
   assert.equal(f.element("autostart-status").textContent, "读取失败")
   const button = f.element("action-autostart")
   button.dataset.action = "autostart-toggle"
   f.click(button)
   assert.equal(f.opened.length, 0)
+})
+
+test("tray markup has no zoom controls or visible autostart footnote", () => {
+  const html = fs.readFileSync(path.join(__dirname, "../ui/tray.html"), "utf8")
+  assert.doesNotMatch(html, /data-action="zoom-|id="zoom-value"|class="zoom"/)
+  const button = html.match(/<button[^>]*id="action-autostart"[^>]*>[\s\S]*?<\/button>/)[0]
+  assert.match(button, /role="menuitemcheckbox"/)
+  assert.match(button, /<span class="label">开机自启<\/span>\s*<span class="switch" aria-hidden="true"><\/span>/)
+  assert.doesNotMatch(button, /autostart-value|已开启|已关闭|状态未知/)
+  assert.match(html, /class="sr-only" id="autostart-status"/)
+  assert.match(html, /aria-checked="true"\] \.switch::after/)
+  assert.match(html, /\.card\s*\{\s*max-height: 100%;/)
 })
 
 test("autostart is single-flight and waits for the native verified result", () => {

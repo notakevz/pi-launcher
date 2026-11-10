@@ -17,6 +17,7 @@
       --accent: #aa6253;
       --accent-soft: rgba(201, 119, 101, .12);
       --ok: #4f8a6b;
+      --switch-off: #d1d4da;
       --shadow: 0 22px 56px -18px rgba(28, 31, 40, .34), 0 3px 10px -4px rgba(28, 31, 40, .14);
     }
     @media (prefers-color-scheme: dark) {
@@ -29,6 +30,7 @@
         --accent: #e1a18c;
         --accent-soft: rgba(225, 161, 140, .14);
         --ok: #7fc09b;
+        --switch-off: #4c4f58;
         --shadow: 0 22px 56px -16px rgba(0, 0, 0, .66), 0 3px 10px -4px rgba(0, 0, 0, .4);
       }
     }
@@ -44,7 +46,7 @@
       -webkit-user-select: none;
     }
     .card {
-      height: 100%;
+      max-height: 100%;
       padding: 8px;
       border: 1px solid var(--line);
       border-radius: 16px;
@@ -52,10 +54,9 @@
       box-shadow: var(--shadow);
       display: flex;
       flex-direction: column;
-      /* The window is a fixed 316x520 and cannot be resized, so every item is
-         `flex: none`. Without this, a taller item list (new action, larger
-         system font, zoomed webview) pushed the last rows — including 退出 —
-         past the edge with no way to reach them. */
+      /* Hug the content instead of stretching a blank area below 退出.
+         The 316x404 window bounds scrolling at larger system font sizes;
+         non-shrinking rows keep every action reachable. */
       overflow-y: auto;
       overscroll-behavior: contain;
       scrollbar-width: thin;
@@ -105,30 +106,33 @@
     button.item:disabled:hover { background: none; }
     .item svg { width: 16px; height: 16px; flex: none; color: var(--muted); }
     .item .label { flex: 1; min-width: 0; }
-    .item .key { font-size: 10.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
-    .item[aria-checked="true"] .key { color: var(--ok); }
-    .autostart-status {
-      flex: none; margin: 0 12px 5px; color: var(--muted);
-      font-size: 10.5px; line-height: 1.45; overflow-wrap: anywhere;
+    .switch {
+      position: relative; width: 34px; height: 20px; flex: none;
+      border: 1px solid transparent; border-radius: 999px;
+      background: var(--switch-off);
     }
-    .head, .endpoint, .zoom { flex: none; }
+    .switch::after {
+      content: ""; position: absolute; top: 2px; left: 2px;
+      width: 14px; height: 14px; border-radius: 50%; background: #fff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .16);
+      transition: transform .14s ease;
+    }
+    .item[aria-checked="true"] .switch { background: var(--ok); }
+    .item[aria-checked="true"] .switch::after { transform: translateX(14px); }
+    .item[aria-checked="mixed"] .switch { background: var(--hover); border-color: var(--muted); }
+    .item[aria-checked="mixed"] .switch::after {
+      top: 8px; left: 11px; width: 10px; height: 2px;
+      border-radius: 1px; background: var(--muted); box-shadow: none;
+    }
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+    }
+    @media (prefers-reduced-motion: reduce) { .switch::after { transition: none; } }
+    .head, .endpoint { flex: none; }
     button.item.danger:hover { background: rgba(190, 80, 70, .1); color: #c1544a; }
     button.item.danger:hover svg { color: #c1544a; }
 
-    .zoom { display: flex; align-items: center; gap: 4px; padding: 3px 8px 5px; }
-    .zoom .zlabel { display: flex; align-items: center; gap: 11px; padding: 0 3px 0 11px; flex: 1; color: var(--ink); }
-    .zoom .zlabel svg { width: 16px; height: 16px; color: var(--muted); }
-    .zbtn {
-      appearance: none; border: 1px solid var(--line); background: var(--hover);
-      color: var(--ink); border-radius: 7px; height: 26px; min-width: 28px;
-      font: inherit; font-size: 12px; cursor: pointer; padding: 0 6px;
-      font-variant-numeric: tabular-nums;
-    }
-    .zbtn:hover { background: var(--accent-soft); border-color: transparent; }
-    .zbtn:focus { outline: none; }
-    .zbtn:focus-visible { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
-    .zbtn.value { min-width: 46px; font-weight: 600; }
-    .zbtn.preset { font-size: 10.5px; color: var(--muted); }
   </style>
 </head>
 <body>
@@ -163,18 +167,6 @@
     </button>
 
     <div class="sep"></div>
-    <div class="zoom">
-      <span class="zlabel">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4M8.5 11h5M11 8.5v5"/></svg>
-        <span>缩放</span>
-      </span>
-      <button class="zbtn" data-action="zoom-out" title="缩小" aria-label="缩小">−</button>
-      <button class="zbtn value" data-action="zoom-reset" id="zoom-value" title="重置为 100%" aria-label="重置缩放">100%</button>
-      <button class="zbtn" data-action="zoom-in" title="放大" aria-label="放大">+</button>
-      <button class="zbtn preset" data-action="zoom-125" title="设为 125%">125%</button>
-    </div>
-
-    <div class="sep"></div>
     <button class="item" data-action="config-dir" role="menuitem">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
       <span class="label">打开配置目录</span>
@@ -185,12 +177,12 @@
     </button>
 
     <div class="sep"></div>
-    <button class="item" data-action="autostart-toggle" id="action-autostart" role="menuitemcheckbox" aria-checked="mixed" aria-describedby="autostart-status" disabled>
+    <button class="item" data-action="autostart-toggle" id="action-autostart" role="menuitemcheckbox" aria-checked="mixed" aria-describedby="autostart-status" title="正在读取开机自启状态…" disabled>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v9M6.3 5.7a8 8 0 1 0 11.4 0"/></svg>
       <span class="label">开机自启</span>
-      <span class="key" id="autostart-value" aria-hidden="true">状态未知</span>
+      <span class="switch" aria-hidden="true"></span>
     </button>
-    <p class="autostart-status" id="autostart-status" role="status" aria-live="polite" aria-atomic="true">打开菜单后读取登录自启状态。</p>
+    <span class="sr-only" id="autostart-status" role="status" aria-live="polite" aria-atomic="true"></span>
     <button class="item danger" data-action="quit" role="menuitem">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/><path d="M15 8l4 4-4 4M19 12H9"/></svg>
       <span class="label">退出</span>

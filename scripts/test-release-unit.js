@@ -113,6 +113,8 @@ test("validates CRLF checksums, atomically tags the source SHA, uploads buffers,
   assert.match(draft.body, /Preserve.*launcher-config\.json.*\.pi.*credentials\/sessions/)
   assert.match(draft.body, /Electron browser local storage\/profile is NOT promised to migrate/)
   assert.match(draft.body, /Unsigned Windows x64/)
+  assert.match(draft.body, /开机自启默认关闭/)
+  assert.match(draft.body, /右侧开关/)
   assert.match(draft.body, /Node\.js >=22\.19.*external Pi Web/)
   assert.match(draft.body, /not Windows GUI, installation or uninstallation acceptance/)
   assert.ok(draft.body.includes(`/commit/${f.options.context.sha}`))
