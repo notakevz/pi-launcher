@@ -1,27 +1,54 @@
+# Tooling and generated builds
 node_modules/
+**/target/
+src-tauri/gen/
 dist/
-.build/
 release/
-.pi-backend-delivery-*/
+.build/
 coverage/
+.cache/
+*.tsbuildinfo
+*.rs.bk
+*.tmp
+
+# Installers, executables and intermediate debug/link outputs (any location)
+*.exe
+*.msi
+*.msix
+*.pdb
+*.ilk
+*.exp
+
+# Local app state, browser profiles and backend ownership records
+launcher-config.json
+launcher-config.*.local.json
+.launcher-config.local.json
+node-runtime.json
+pi-web-*.json
+pi-web-*.json.*.tmp
 *.log
 *.log.*
-__pycache__/
+profile/
+profiles/
+webview2/
+session/
+sessions/
+.pi/
 
-# Local runtime configuration and credentials; commit examples only.
-/launcher-config.json
-/config/launcher-config.json
-/build-config.json
-*.local.json
+# Credentials and machine-only settings
 .env
 .env.*
 !.env.example
+credentials.json
 auth.json
-models.json
-mcp.json
-/pi-web-*.json
-/pi-web-*.json.*.tmp
+*.pem
+*.key
+*.p12
+*.pfx
 
+# Editor/OS state
+.vscode/
+.idea/
 .DS_Store
 Thumbs.db
-.@__thumb/
+Desktop.ini

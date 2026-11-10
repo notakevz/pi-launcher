@@ -5,7 +5,7 @@ const path = require("node:path")
 const { pathToFileURL } = require("node:url")
 const { normalizeRepository, readRelease, sha256, releaseFileHash } = require("./backend-manifest")
 const defaults = require("../config/backend-build.json")
-const { resolveRuntime, serverEnvironment } = require("../src/backend")
+const { resolveRuntime, serverEnvironment } = require("./backend-build-tools")
 
 function run(command, args, cwd, env, capture = false) {
   console.log(`> ${path.basename(command)} ${args.join(" ")}`)
@@ -62,7 +62,10 @@ async function main() {
   if (!["full", "windows-core"].includes(scope)) throw new Error("Unknown test scope")
   const env = serverEnvironment()
   if (fs.existsSync(output)) throw new Error(`Output already exists. Stop its backend and move the old directory first, or choose a new --output path: ${output}`)
-  const runtime = resolveRuntime(env, true) // npm is required only for this explicit build.
+  const runtime = resolveRuntime(env) // npm is required only for this explicit build.
+  const nodeVersion = run(runtime.node, ["--version"], project, env, true)
+  const [major, minor] = nodeVersion.replace(/^v/, "").split(".").map(Number)
+  if (!Number.isInteger(major) || !Number.isInteger(minor) || major < 22 || major === 22 && minor < 19) throw new Error("Backend builds require Node.js >=22.19")
   const npm = path.join(path.dirname(runtime.npx), "npm-cli.js")
   const git = (args, capture = true) => run("git", ["-C", source, ...args], source, env, capture)
   if (normalizeRepository(git(["remote", "get-url", "origin"])) !== repository) throw new Error("Source origin is not the configured repository; set --repository explicitly for another source")

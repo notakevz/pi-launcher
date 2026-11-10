@@ -16,53 +16,55 @@ jobs:
   build:
     name: Package Windows x64
     runs-on: windows-latest
-    timeout-minutes: 30
-    env:
-      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+    timeout-minutes: 45
     steps:
-      - name: Check out source
+      - name: Check out the fixed source commit
         uses: actions/checkout@v4
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
 
-      - name: Set up Node.js
+      - name: Set up Node.js 22
         uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: npm
 
-      - name: Install dependencies
+      # Cargo.toml requires Rust >=1.90. Use the native Windows MSVC target.
+      - name: Set up stable Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      - name: Install locked Node tooling
         run: npm ci
 
-      - name: Run unit tests
-        run: npm run test:unit
+      - run: npm run check:version
+      - run: npm run check:syntax
+      - run: npm run test:tools
+      - run: cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check
+      - run: cargo test --manifest-path src-tauri/Cargo.toml --locked --target x86_64-pc-windows-msvc
+      - run: cargo clippy --manifest-path src-tauri/Cargo.toml --locked --target x86_64-pc-windows-msvc --all-targets -- -D warnings
 
-      - name: Check JavaScript syntax
-        run: npm run check:syntax
+      # Tauri CLI runs cargo build with --locked and bundles NSIS, no updater/publish.
+      - name: Build unsigned Tauri NSIS installer
+        run: npm run build
 
-      - name: Build unsigned Windows installer
-        run: npm run dist -- --x64 --publish never
+      - name: Stage release attachments in runner temporary storage
+        run: npm run stage:installer -- --release-output "${{ runner.temp }}/pi-launcher-release"
 
-      - name: Generate SHA-256 checksums
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $installers = @(Get-ChildItem -LiteralPath dist -Filter '*.exe' -File)
-          if ($installers.Count -eq 0) { throw 'No Windows installer was generated.' }
-          $checksums = foreach ($installer in $installers) {
-            $hash = (Get-FileHash -LiteralPath $installer.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
-            '{0}  {1}' -f $hash, $installer.Name
-          }
-          $checksums | Set-Content -LiteralPath dist/SHA256SUMS.txt -Encoding utf8
-
-      - name: Upload installer and checksums
+      - name: Upload only installer and checksum
         uses: actions/upload-artifact@v4
         with:
           name: pi-launcher-windows-x64
           path: |
-            dist/*.exe
-            dist/SHA256SUMS.txt
+            ${{ runner.temp }}/pi-launcher-release/pi-launcher-*-x64-setup.exe
+            ${{ runner.temp }}/pi-launcher-release/SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 7
           compression-level: 0
@@ -70,7 +72,7 @@ jobs:
   release:
     name: Publish GitHub Release
     needs: build
-    if: ${{ inputs.publish_release }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish_release }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -89,7 +91,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: pi-launcher-windows-x64
-          path: dist
+          path: ${{ runner.temp }}/pi-launcher-release
 
       - name: Publish a new version without overwriting existing releases
         uses: actions/github-script@v7
@@ -98,7 +100,7 @@ jobs:
             const { publishRelease } = require('./scripts/publish-release.js')
             const release = await publishRelease({
               github, context, core,
-              directory: require('node:path').resolve('dist'),
+              directory: require('node:path').join(process.env.RUNNER_TEMP, 'pi-launcher-release'),
               version: require('./package.json').version,
             })
             await core.summary

@@ -72,8 +72,19 @@ async function publishRelease({ github, context, core, directory, version }) {
   const server = (context.serverUrl || "https://github.com").replace(/\/$/, "")
   const project = `${server}/${owner}/${repo}`
   const body = [
+    "## 必须先手动卸载旧版 / REQUIRED migration from the old Electron installer/client",
+    "**请先退出所有旧 Pi Launcher（含托盘），手动卸载旧安装器/客户端，然后再安装新的 Tauri 版。旧安装器不会自动升级，禁止同时运行两个版本。**",
+    "保留 `%APPDATA%\\Pi Launcher` 配置（尤其 `launcher-config.json`）和 `.pi` 凭据/会话（含自定义目录），卸载时不要清空数据。Electron 浏览器 local storage/profile 不保证迁移到 WebView2，页面偏好或浏览器登录状态可能需要重新设置。",
+    "",
+    "**Exit ALL old Pi Launcher instances (including the tray), manually uninstall the OLD installer/client, THEN install this new Tauri version. There is NO automatic upgrade from the old installer. Do not run both clients together.**",
+    "Preserve `%APPDATA%\\Pi Launcher` (especially `launcher-config.json`) and your `.pi` credentials/sessions (or custom Pi data directory). Do not delete these directories during uninstall.",
+    "Electron browser local storage/profile is NOT promised to migrate to WebView2; browser-only preferences or sign-in state may need to be set again.",
+    "",
+    "## Windows x64 — Tauri 2 / WebView2",
+    "托盘右键菜单新增‘开机自启’开关，仅在你点击时修改当前用户的登录启动登记；不需要管理员权限。Windows 设置或组织策略仍可能另行禁用它。",
+    "",
     "Unsigned Windows x64 installer. Windows SmartScreen may show a warning.",
-    "Requires separately installed Node.js >=22.19 and an external Pi Web backend; neither is bundled.",
+    "Requires separately installed Node.js >=22.19, Microsoft Edge WebView2 Runtime and an external Pi Web backend; Node.js and the backend are not bundled.",
     "A successful build/release is not Windows GUI, installation or uninstallation acceptance testing.",
     "",
     `Source commit: [${context.sha}](${project}/commit/${context.sha})`,

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; script-src 'self'; connect-src ipc: http://ipc.localhost; base-uri 'none'; form-action 'none'">
   <meta name="color-scheme" content="light dark">
   <title>Pi Launcher</title>
   <style>
@@ -106,6 +106,27 @@
     .footer svg { width: 12px; height: 12px; opacity: .7; }
     .divider { margin: 0 3px; opacity: .45; }
     .endpoint { font-family: "Cascadia Code", Consolas, monospace; font-size: 10px; }
+    /* Startup failure: the message box may be refused by policy, so the reason
+       and the log path stay on screen instead. */
+    .error-box {
+      margin: 18px 0 0;
+      padding: 12px 14px;
+      max-height: 220px;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--track);
+      color: var(--ink);
+      font-family: "Cascadia Code", Consolas, monospace;
+      font-size: 11px;
+      line-height: 1.65;
+      text-align: left;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    body[data-phase="failed"] .track,
+    body[data-phase="failed"] .steps { display: none; }
+    body[data-phase="failed"] .symbol { opacity: .45; }
     @keyframes spin { to { transform: rotate(360deg); } }
     @keyframes sweep { from { transform: translateX(-110%); } to { transform: translateX(350%); } }
     @keyframes appear { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
@@ -149,7 +170,7 @@
       <div class="symbol" aria-hidden="true"><img src="icon.svg" alt=""></div>
       <h1 id="heading">正在准备工作空间</h1>
       <p class="subtitle">一切就绪后，将自动为你打开。</p>
-      <div class="status" role="status" aria-live="polite" aria-atomic="true">
+      <div class="status" id="status-bar" role="status" aria-live="polite" aria-atomic="true">
         <span class="spinner" aria-hidden="true"></span>
         <span id="status-text">正在检查运行环境</span>
       </div>
@@ -159,6 +180,7 @@
         <li class="step" data-step="backend"><span class="step-dot" aria-hidden="true">2</span>本地服务</li>
         <li class="step" data-step="workspace"><span class="step-dot" aria-hidden="true">3</span>工作空间</li>
       </ol>
+      <pre class="error-box" id="error-box" hidden></pre>
     </section>
     <footer class="footer">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><rect x="2" y="2.5" width="12" height="8.5" rx="1.5"/><path d="M5.5 14h5M8 11v3"/></svg>

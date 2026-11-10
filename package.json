@@ -1,57 +1,30 @@
 {
-  "name": "pi-launcher",
-  "version": "0.0.2",
+  "name": "pi-launcher-tauri",
+  "version": "0.1.0",
   "private": true,
+  "description": "Windows Pi Web desktop launcher using Tauri v2 and WebView2",
   "license": "MIT",
-  "description": "Windows desktop launcher for an npm-installed or locally built Pi Web backend.",
   "repository": {
     "type": "git",
     "url": "https://github.com/notakevz/pi-launcher.git"
   },
-  "homepage": "https://github.com/notakevz/pi-launcher#readme",
-  "bugs": {
-    "url": "https://github.com/notakevz/pi-launcher/issues"
-  },
   "engines": {
-    "node": ">=22.19.0"
+    "node": ">=22.19"
   },
-  "main": "src/main.js",
   "scripts": {
-    "start": "electron .",
-    "test": "npm run test:unit",
-    "test:unit": "node --test scripts/test-local-backend.js scripts/test-config-unit.js scripts/test-main-unit.js scripts/test-release-unit.js",
-    "test:integration": "node scripts/test-integration.js",
-    "check:syntax": "node --check src/main.js && node --check src/backend.js && node --check src/local-backend.js && node --check scripts/build-source.js",
-    "backend:check": "node scripts/prepare-backend.js",
-    "test:packaged": "node scripts/test-packaged-exe.js",
-    "test:loading": "electron scripts/test-loading-electron.js",
-    "test:subagent": "node --test scripts/test-subagent-policy.mjs && node scripts/test-subagent-runtime.mjs",
+    "tauri": "tauri",
+    "start": "tauri dev",
+    "dev": "tauri dev",
+    "build": "npm run check:version && tauri build --ci --no-sign --bundles nsis -- --locked",
+    "test": "npm run test:tools",
+    "test:tools": "node --test scripts/test-release-unit.js scripts/test-backend-tools.js scripts/test-version-unit.js scripts/test-stage-unit.js scripts/test-tray-unit.js",
+    "check:syntax": "node scripts/check-syntax.js",
+    "check:version": "node scripts/check-version.js",
+    "stage:installer": "node scripts/stage-installer.js",
     "build:source": "node scripts/build-source.js",
-    "test:source-web": "node scripts/test-source-web.js",
-    "icons": "python scripts/generate-icon.py",
-    "dist": "electron-builder --win nsis"
+    "backend:verify": "node scripts/verify-backend.js"
   },
   "devDependencies": {
-    "electron": "42.3.3",
-    "electron-builder": "26.15.2"
-  },
-  "allowScripts": { "electron": true, "app-builder-bin": true },
-  "build": {
-    "appId": "local.pi.launcher",
-    "productName": "Pi Launcher",
-    "directories": { "output": "dist" },
-    "files": ["src/main.js", "src/backend.js", "src/local-backend.js", "src/process-tools.js", "assets/**/*", "config/launcher-defaults.json", "config/launcher-config.example.json", "LICENSE", "THIRD_PARTY_NOTICES.md", "package.json"],
-    "win": { "icon": "assets/icon.ico", "target": "nsis" },
-    "nsis": {
-      "artifactName": "pi-launcher-${version}-${arch}-setup.${ext}",
-      "oneClick": false,
-      "perMachine": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "Pi Launcher",
-      "installerIcon": "assets/icon.ico",
-      "uninstallerIcon": "assets/icon.ico"
-    }
+    "@tauri-apps/cli": "2.12.4"
   }
 }

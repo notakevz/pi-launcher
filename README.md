@@ -2,7 +2,7 @@
 
 [GitHub](https://github.com/notakevz/pi-launcher) · [MIT](LICENSE)
 
-Pi Web 的 Windows 启动器：负责启动和管理 Pi Web 后端进程，并提供独立窗口。
+Pi Web 的 Windows 启动器（0.1.0，Tauri 2 + WebView2）：负责启动和管理 Pi Web 后端进程，并提供独立窗口。
 关闭窗口会隐藏到托盘，再次打开会唤回窗口。
 
 支持两种后端：npm 安装的原版 Pi Web，或自己构建的 Pi Web fork。
@@ -12,11 +12,23 @@ Pi Web 的 Windows 启动器：负责启动和管理 Pi Web 后端进程，并�
 
 ## 环境要求
 
-- Windows 10/11，Windows 原生 Node.js 22.19 或更新版本（包含 npm）。
-- 从源码运行启动器、构建 fork 时还需要 Git。
+- Windows 10/11 x64、Windows 原生 Node.js 22.19 或更新版本（包含 npm）、Microsoft Edge WebView2 Runtime。
+- 从源码运行启动器还需要 Git、Rust stable >=1.90（MSVC 工具链）、Visual Studio 2022 Build Tools 的“使用 C++ 的桌面开发”及 Windows SDK；不使用 Electron。
+- 仅构建 fork 后端时需要 Git、Node/npm，不需要 Rust。
 - 模型账号与 API Key 在 Pi Web 中配置，不需要写进启动器配置。
 
 以下命令均在 Windows PowerShell 中执行。
+
+## 从旧 Electron 版迁移：必须先手动卸载
+
+**0.1.0 不支持旧安装器自动升级。请按顺序操作：**
+
+1. 结束正在运行的任务，从托盘退出**所有旧 Pi Launcher**，确认旧客户端已完全退出。
+2. 在 Windows“已安装的应用”中**手动卸载旧安装器安装的客户端**，然后再安装新的 Tauri 版；不要同时运行两个版本。
+3. **保留 `%APPDATA%\Pi Launcher` 中的配置（尤其 `launcher-config.json`）及 Pi 的 `.pi` 凭据、会话**；使用自定义数据目录时也须保留它们，不要在卸载时清空数据目录。建议先备份配置。
+
+新版本沿用启动器配置目录；但 **Electron 浏览器 local storage / profile 不保证迁移到 WebView2**，
+页面偏好或浏览器内登录状态可能需要重新设置。保留 Pi 凭据与会话不等于浏览器存储迁移。
 
 ## 1. 准备启动器
 
@@ -95,8 +107,8 @@ notepad $configFile
 
 配置文件默认位于 `%APPDATA%\Pi Launcher\launcher-config.json`。
 设置过 `PI_LAUNCHER_DATA_DIR` 时，上面的命令与应用都会使用该自定义目录。
-旧名称下的配置不会自动迁移，旧版启动器环境变量不再读取；原有用户数据保持不变，
-如需沿用旧配置，请先自行核对，再手动复制到新配置目录。
+旧 Electron 版使用同一路径的 `launcher-config.json` 可以保留沿用，先核对字段与后端路径；
+其他旧名称目录不会自动迁移，旧版环境变量不再读取。不要删除旧数据来完成安装。
 如果已有配置，切换后端时只需把 `backendPath` 改为上面打印的目录。
 `cwd` 是默认工作目录，可以改为你实际使用的项目目录。
 
@@ -117,10 +129,11 @@ npm start
 
 已安装客户端的用户，直接打开桌面或开始菜单中的 Pi Launcher。
 第一次使用时，在 Pi Web 的 Models 面板中登录模型提供方或配置 API Key。
-启动成功后浏览器会自动打开 http://127.0.0.1:30141，改过端口的话地址跟着变化。
+启动成功后，客户端窗口通过 WebView2 显示 http://127.0.0.1:30141；改过端口的话地址跟着变化。
 
 - 关闭窗口只是隐藏到托盘，后端继续运行。
 - 托盘菜单的"退出"会停止启动器拥有的后端并退出，请先结束正在进行的任务。
+- 托盘菜单的"开机自启"开关控制当前用户登录 Windows 后自动启动，不需要管理员权限；未主动开启时不会创建启动项。菜单显示注册状态，Windows 任务管理器或组织策略仍可能禁用它。
 - 同一端口上已有健康的 Pi Web 服务时，启动器直接复用，不接管也不停止它。
 - 托盘菜单的"打开配置文件目录"可以找到 `launcher-config.json`；修改后需退出并重开。
 - 托盘菜单的"打开日志目录"可以查看日志。
@@ -136,11 +149,12 @@ npm start
 
 ## 数据与清理
 
-- 启动器自己的数据（配置、日志、进程记录）都在 `%APPDATA%\Pi Launcher`；
-  删除整个目录即可重置启动器，下次启动会重新生成。
-- 卸载程序不会删除该目录，需要手动清理。
-- 模型账号、会话和 Pi 的配置在 Pi 的用户目录（默认 `%USERPROFILE%\.pi`，
-  可用 `PI_CODING_AGENT_DIR` 覆盖）中，启动器不会读取、迁移或清空它们。
+- 启动器配置、日志、进程记录位于 `%APPDATA%\Pi Launcher`，或 `PI_LAUNCHER_DATA_DIR` 指定的目录。
+  更新、卸载再安装时保留它们；不要用删除整个目录的方式迁移。
+- WebView2 浏览器 profile 位于 `%LOCALAPPDATA%\Pi Launcher\webview2`，与 Electron profile 不共用，也不保证迁移其 local storage。
+- “开机自启”使用当前用户的 Windows Run 启动项，不写入个人 JSON。卸载新版时仅清理指向本次安装的启动项，不删除配置或 Pi 数据。
+- 模型凭据、会话和 Pi 的配置由 Pi Web/Pi 管理，默认在 `%USERPROFILE%\.pi` 中
+  （可能通过 `PI_CODING_AGENT_DIR` 自定义）；不要清空它们。启动器不会替你迁移或删除它们。
 
 ## 也可以直接使用浏览器
 

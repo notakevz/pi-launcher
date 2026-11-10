@@ -1,4 +1,4 @@
-// Manual build/deployment integrity checks. Never imported by the Electron runtime.
+// Manual backend build/deployment integrity checks. Not used by the Tauri runtime.
 const crypto = require("node:crypto")
 const fs = require("node:fs")
 const path = require("node:path")

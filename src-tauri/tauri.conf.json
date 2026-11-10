@@ -1,0 +1,39 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Pi Launcher",
+  "version": "0.1.0",
+  "identifier": "local.pi.launcher",
+  "build": {
+    "frontendDist": "../ui"
+  },
+  "app": {
+    "windows": [],
+    "withGlobalTauri": false,
+    "security": {
+      "csp": "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; script-src 'self'; connect-src ipc: http://ipc.localhost; base-uri 'none'; form-action 'none'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "licenseFile": "../LICENSE",
+    "resources": {
+      "../LICENSE": "LICENSE",
+      "../THIRD_PARTY_NOTICES.md": "THIRD_PARTY_NOTICES.md",
+      "nsis/LICENSE-TAURI-MIT": "LICENSE-TAURI-MIT"
+    },
+    "icon": ["icons/icon.ico", "icons/icon.png"],
+    "publisher": "Pi Launcher",
+    "copyright": "MIT License",
+    "category": "DeveloperTool",
+    "shortDescription": "Pi Web desktop launcher",
+    "longDescription": "Starts and manages a local Pi Web backend and shows it in a standalone window.",
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser",
+        "installerHooks": "./nsis/hooks.nsh",
+        "template": "./nsis/installer.nsi"
+      }
+    }
+  }
+}

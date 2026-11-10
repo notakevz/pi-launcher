@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Unknown or unnecessary permissions are denied. Both bundled pages are driven entirely from Rust (window.eval) and never use IPC commands, and remote Pi Web pages are never granted anything.",
+  "windows": ["main"],
+  "permissions": []
+}

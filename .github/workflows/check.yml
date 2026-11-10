@@ -1,4 +1,4 @@
-name: Unit checks
+name: Source checks
 
 on:
   push:
@@ -9,19 +9,32 @@ permissions:
   contents: read
 
 jobs:
-  unit:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-        node: [22, 24]
-    runs-on: ${{ matrix.os }}
+  windows:
+    name: Node tools and Windows Rust
+    runs-on: windows-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node }}
-      # Unit tests use only Node built-ins; no Electron download or backend is needed.
-      - run: npm run test:unit
-      - run: node --check src/main.js
-      - run: node --check scripts/build-source.js
+          node-version: "22"
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+      - run: npm ci
+      - run: npm run check:version
+      - run: npm run check:syntax
+      # Node built-ins only: release/backend tooling, not Tauri runtime tests.
+      - run: npm run test:tools
+      # The application uses Win32 APIs; do not claim Linux runtime coverage.
+      - run: cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check
+      - run: cargo test --manifest-path src-tauri/Cargo.toml --locked --target x86_64-pc-windows-msvc
+      - run: cargo clippy --manifest-path src-tauri/Cargo.toml --locked --target x86_64-pc-windows-msvc --all-targets -- -D warnings
