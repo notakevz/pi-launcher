@@ -11,6 +11,18 @@ is the Pi project logo, used unmodified on a transparent background under the Pi
 MIT License (Copyright (c) 2025 Mario Zechner).
 Source: [pi.dev/logo-auto.svg](https://pi.dev/logo-auto.svg) · [earendil-works/pi](https://github.com/earendil-works/pi)
 
+## Bundled frontend
+
+The tray uses [Vue 3](https://github.com/vuejs/core) (MIT),
+[PrimeVue](https://github.com/primefaces/primevue) (MIT), and
+[PrimeUIX themes/utilities](https://github.com/primefaces/primeuix) (MIT).
+Vite bundles these local resources; the application does not fetch a CDN.
+`vite.config.mjs` copies the complete license notices of the locked production
+JS dependency graph to `THIRD_PARTY_FRONTEND_LICENSES.txt`. This generated notice
+is embedded with the frontend and installed as a resource; preserve it when
+redistributing the binary. Vite, Vitest, jsdom and Playwright are development
+and test tools, not bundled desktop runtimes.
+
 ## Desktop runtime and build tools
 
 - [Tauri v2](https://github.com/tauri-apps/tauri) is the desktop runtime, with
@@ -31,7 +43,7 @@ Source: [pi.dev/logo-auto.svg](https://pi.dev/logo-auto.svg) · [earendil-works/
   `LICENSE-TAURI-MIT`. The CLI version is pinned; template updates require review.
 - The PNG/ICO icon files are checked in directly; this version ships no icon generation script.
 
-`package-lock.json` pins the JS tooling and `src-tauri/Cargo.lock` pins the Rust
+`package-lock.json` pins the JS frontend and tooling and `src-tauri/Cargo.lock` pins the Rust
 dependency graph; dependencies retain their upstream licenses. This document is an
 overview, not a replacement for bundled notices.
 
@@ -39,8 +51,9 @@ overview, not a replacement for bundled notices.
 
 The Tauri bundle configuration uses `../LICENSE` as its license file and maps
 `../LICENSE` and `../THIRD_PARTY_NOTICES.md` into the installed resources as
-`LICENSE` and `THIRD_PARTY_NOTICES.md`. Preserve both resources and the icon
-attribution when changing packaging. The launcher does not bundle the Electron
+`LICENSE` and `THIRD_PARTY_NOTICES.md`. It also installs `LICENSE-TAURI-MIT`
+and the generated `THIRD_PARTY_FRONTEND_LICENSES.txt`. Preserve these resources
+and the icon attribution when changing packaging. The launcher does not bundle the Electron
 runtime or a Pi Web backend; independently distributed runtimes and backend
 artifacts retain their own license notices.
 

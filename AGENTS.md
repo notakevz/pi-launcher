@@ -26,7 +26,7 @@
 
 ## Architecture and change boundaries
 
-- Windows Tauri 2 / Rust launcher, static `ui/` frontend and system WebView2. No Electron runtime.
+- Windows Tauri 2 / Rust launcher and system WebView2. `ui/` contains a static loading page and the Vue 3/PrimeVue tray; Vite builds both to ignored `.build/ui/`. No Electron runtime or CDN dependencies.
 - Application identity: Pi Launcher, `local.pi.launcher`, data directory `Pi Launcher`, launcher environment prefix `PI_LAUNCHER_`.
 - Keep startup separate from backend installation/updates. Never silently download, replace or select another backend. No automatic old-installer upgrade.
 - Do not modify the backend repository as part of launcher changes without separate authorization. Tool modes are backend features, not an OS sandbox.
@@ -36,12 +36,12 @@
 - Never commit credentials, sessions, logs, backend artifacts, browser profiles, caches or real user configuration. Do not log secrets.
 - Never stop an external backend by guessing; verify identity and ownership before stopping a launcher-owned process.
 - Build Windows is manual-only, fixed-SHA, read-only. Publishing is opt-in in a separate `contents: write` job, bound to built SHA/checksums, refusing existing tags/releases and failing closed on API errors.
-- Keep scripts minimal CommonJS with Node built-ins. Avoid unrelated refactors and new dependency frameworks.
+- Keep backend/release scripts minimal CommonJS with Node built-ins. Frontend uses the approved Vue 3/PrimeVue/Vite stack; keep its ESM configs separate and avoid unrelated frameworks.
 
 ## Verification rules
 
 - Node tools tests, Windows Rust tests, desktop behavior and packaged installer acceptance are separate evidence levels.
-- `npm test` tests release/backend tooling, not the application runtime. Run Windows Rust fmt/test/clippy separately as documented.
+- `npm test` runs release/backend tooling and jsdom Vue/PrimeVue component tests. `npm run test:ui:layout` separately tests the built page in isolated Edge, not real Tauri/registry behavior. Build UI before Rust tests; run Windows Rust fmt/test/clippy separately as documented.
 - Use temporary state, isolated Pi data and independent ports. Do not use real sessions or credentials as fixtures.
 - Missing prerequisites are not a pass. Old Electron results do not validate Tauri; Linux Node checks do not validate Win32 Rust or the EXE.
 - Record actual commands/outcomes in the task report, not README. Do not invent success rates or claim CI ran merely because YAML exists.

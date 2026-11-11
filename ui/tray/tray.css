@@ -1,0 +1,121 @@
+:root {
+  color-scheme: light dark;
+  font-family: "Microsoft YaHei UI", "Microsoft YaHei", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  font-size: 13px;
+  font-synthesis: none;
+  --tray-surface: #fff;
+  --tray-ink: #24272d;
+  --tray-muted: #727782;
+  --tray-line: rgba(32, 36, 45, .09);
+  --tray-hover: rgba(32, 36, 45, .055);
+  --tray-accent: #aa6253;
+  --tray-ok: #4f8a6b;
+  --tray-shadow: 0 6px 14px -6px #1c1f4050, 0 2px 6px -2px #1c1f4020;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --tray-surface: #1e1f24;
+    --tray-ink: #ededef;
+    --tray-muted: #a0a3ad;
+    --tray-line: rgba(255, 255, 255, .09);
+    --tray-hover: rgba(255, 255, 255, .07);
+    --tray-accent: #e1a18c;
+    --tray-ok: #7fc09b;
+    --tray-shadow: 0 6px 14px -6px #000b, 0 2px 6px -2px #0006;
+  }
+}
+* { box-sizing: border-box; }
+html, body, #app { margin: 0; padding: 0; background: transparent; }
+html, body { overflow: hidden; }
+body {
+  color: var(--tray-ink);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  -webkit-user-select: none;
+}
+/* Fixed intrinsic width; neither root nor card stretches to the webview height. */
+.tray-wrapper { width: 328px; padding: 12px; }
+.tray-card {
+  position: relative;
+  border: 1px solid var(--tray-line);
+  border-radius: 16px;
+  padding: 8px;
+  background: var(--tray-surface);
+  box-shadow: var(--tray-shadow);
+  max-height: var(--tray-card-max-height, none);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--tray-line) transparent;
+}
+/* No shrinking: this is also the independently measurable natural-height box. */
+.tray-content { display: flow-root; }
+.tray-head { display: flex; align-items: center; gap: 9px; padding: 10px 10px 9px; }
+.tray-head img { flex: none; }
+.head-text { min-width: 0; }
+.tray-head h1 { margin: 0; font-size: 1.04rem; font-weight: 650; letter-spacing: -.2px; line-height: 1.35; }
+.tray-head p { margin: 2px 0 0; color: var(--tray-muted); font-size: .85rem; line-height: 1.4; }
+.status-tag {
+  display: inline-flex; align-items: center; gap: 5px; flex: none; margin-left: auto;
+  padding: 4px 7px; border-radius: 99px; background: var(--tray-hover);
+  color: var(--tray-muted); font-size: .81rem; font-weight: 550; line-height: 1.2; white-space: nowrap;
+}
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.status-tag[data-ready="true"] { color: var(--tray-ok); background: color-mix(in srgb, var(--tray-ok) 12%, transparent); }
+.tray-endpoint {
+  display: flex; align-items: center; gap: 7px; margin: 0 7px 6px; padding: 8px 9px;
+  border-radius: 9px; background: var(--tray-hover); color: var(--tray-muted);
+  font-size: .85rem; line-height: 1.4; font-variant-numeric: tabular-nums;
+}
+.tray-endpoint svg { width: 13px; height: 13px; flex: none; }
+.endpoint-url { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.endpoint-version { margin-left: auto; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tray-wrapper .p-divider { margin: 5px 9px; width: auto; min-height: 1px; }
+.tray-wrapper .p-divider::before { border-color: var(--tray-line); }
+.tray-wrapper .tray-action, .startup-row {
+  display: flex; align-items: center; justify-content: flex-start; gap: 11px;
+  /* PrimeVue hover/active add a 1px border. Reserve it in every state so
+     pointer movement cannot grow a row and trigger a native resize. */
+  width: 100%; margin: 0; padding: 8px 10px; border: 1px solid transparent; border-radius: 9px;
+  background: transparent; color: var(--tray-ink); font: inherit;
+  font-weight: 400; line-height: 1.4; text-align: left; text-decoration: none;
+}
+.tray-wrapper .tray-action { cursor: pointer; box-shadow: none; }
+.tray-action svg, .startup-row > svg { width: 16px; height: 16px; flex: none; color: var(--tray-muted); }
+.action-label { flex: 1; min-width: 0; cursor: inherit; }
+.tray-wrapper .tray-action:not(:disabled):hover, .startup-row:not(.startup-unknown):hover { background: var(--tray-hover); }
+.tray-wrapper .tray-action:focus-visible, .startup-row:has(input:focus-visible) {
+  background: var(--tray-hover); outline: 1px solid var(--tray-accent); outline-offset: -1px;
+}
+.tray-wrapper .tray-action:disabled { opacity: .42; cursor: default; }
+.tray-wrapper .tray-quit:not(:disabled):hover { background: rgba(190, 80, 70, .1); color: #c1544a; }
+.tray-wrapper .tray-quit:hover svg { color: inherit; }
+.startup-row { cursor: pointer; }
+.startup-row.startup-unknown, .startup-row.startup-pending { cursor: default; }
+.startup-row .p-toggleswitch {
+  flex: none;
+  --p-toggleswitch-width: 2.6rem;
+  --p-toggleswitch-height: 1.54rem;
+  --p-toggleswitch-handle-size: 1.08rem;
+  --p-toggleswitch-gap: .23rem;
+  --p-toggleswitch-checked-background: var(--tray-ok);
+  --p-toggleswitch-checked-hover-background: var(--tray-ok);
+}
+/* Keep PrimeVue's real input/slider/handle. Unknown is centered and marked,
+   rather than visually presenting an unverified state as 'off'. */
+.startup-unknown .p-toggleswitch { opacity: 1; }
+.startup-unknown .p-toggleswitch-slider {
+  background: var(--tray-hover); border: 1px dashed var(--tray-muted);
+}
+.startup-unknown .p-toggleswitch-handle {
+  left: 50%; transform: translateX(-50%); background: transparent; color: var(--tray-muted);
+}
+.unknown-mark { font-size: .85rem; font-weight: 600; line-height: 1; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

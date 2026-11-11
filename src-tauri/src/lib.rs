@@ -1,14 +1,15 @@
 //! Pi Launcher — Tauri v2 port.
 //!
 //! The Rust side owns configuration, backend lifecycle, window and tray.
-//! The bundled frontend is a single static loading page; Pi Web itself is
-//! loaded as an external origin with no IPC permissions granted to it.
+//! The bundled frontend has a loading page and a compiled Vue tray. Pi Web
+//! itself is an external origin with no IPC permissions granted to it.
 
 mod autostart;
 mod backend;
 mod config;
 mod http;
 mod process;
+mod tray_layout;
 mod util;
 
 use std::fmt::Display;
@@ -201,6 +202,9 @@ struct Context {
     /// distinguish "click the tray icon again to dismiss" from a fresh open.
     tray_shown_at: Arc<Mutex<Option<Instant>>>,
     tray_hidden_at: Arc<Mutex<Option<Instant>>>,
+    /// Last natural content measurement; None keeps the first opening hidden.
+    tray_size: Arc<Mutex<Option<tray_layout::Size>>>,
+    tray_open_requested: Arc<AtomicBool>,
 }
 
 impl Context {
@@ -221,6 +225,8 @@ impl Context {
             last_error: Arc::new(Mutex::new(None)),
             tray_shown_at: Arc::new(Mutex::new(None)),
             tray_hidden_at: Arc::new(Mutex::new(None)),
+            tray_size: Arc::new(Mutex::new(None)),
+            tray_open_requested: Arc::new(AtomicBool::new(false)),
         }
     }
 }
@@ -478,7 +484,7 @@ fn ensure_tray_menu_window(app: &AppHandle) -> bool {
     let built = WebviewWindowBuilder::new(app, TRAY_WINDOW, WebviewUrl::App("tray.html".into()))
         .title(APP_NAME)
         .data_directory(webview_dir)
-        .inner_size(316.0, 404.0)
+        .inner_size(f64::from(tray_layout::DEFAULT_WIDTH), 440.0)
         .resizable(false)
         .decorations(false)
         .transparent(true)
@@ -492,8 +498,8 @@ fn ensure_tray_menu_window(app: &AppHandle) -> bool {
             is_tray_url(url)
         })
         .on_page_load(|window, payload| {
-            // Creation/show-time eval can run before tray.js defines its
-            // receiver. Replay the *current* state once that receiver exists.
+            // The Vue entry also explicitly requests replay after mount, since
+            // native page completion can race module initialization.
             if payload.event() == PageLoadEvent::Finished && is_tray_url(payload.url()) {
                 update_tray_state(window.app_handle());
             }
@@ -546,8 +552,13 @@ fn update_tray_state(app: &AppHandle) {
         None => (false, "等待连接".to_string(), String::new(), String::new()),
     };
     let autostart = lock(&context.autostart).clone();
+    let max_height = app
+        .get_webview_window(TRAY_WINDOW)
+        .map(|window| tray_available_size(&window).height)
+        .unwrap_or(tray_layout::MAX_HEIGHT);
     let payload = serde_json::json!({
         "autostart": autostart,
+        "maxHeight": max_height,
         "ready": ready,
         "endpoint": endpoint,
         "version": version,
@@ -593,6 +604,10 @@ fn build_tray(app: &mut App) -> tauri::Result<()> {
 }
 
 fn toggle_tray_menu(app: &AppHandle, context: &Context) {
+    // A second click while the first content measurement is pending cancels it.
+    if context.tray_open_requested.swap(false, Ordering::SeqCst) {
+        return;
+    }
     let Some(window) = app.get_webview_window(TRAY_WINDOW) else {
         // Popover is normally created right after the main page starts
         // loading; this only happens on a very early right-click. Build it on a
@@ -632,7 +647,83 @@ fn toggle_tray_menu(app: &AppHandle, context: &Context) {
     show_tray_menu(app, context, &window);
 }
 
+fn tray_available_size(window: &WebviewWindow<Wry>) -> tray_layout::Size {
+    window
+        .current_monitor()
+        .ok()
+        .flatten()
+        .and_then(|monitor| {
+            let area = monitor.work_area();
+            tray_layout::Size::from_work_area(
+                area.size.width,
+                area.size.height,
+                monitor.scale_factor(),
+            )
+        })
+        .unwrap_or(tray_layout::Size {
+            width: tray_layout::MAX_WIDTH,
+            height: tray_layout::MAX_HEIGHT,
+        })
+}
+
+fn resize_tray_menu(
+    window: &WebviewWindow<Wry>,
+    context: &Context,
+    natural: tray_layout::Size,
+) -> bool {
+    let fitted = natural.fit(tray_available_size(window));
+    if let Err(error) = window.set_size(tauri::LogicalSize::new(fitted.width, fitted.height)) {
+        log_error(&context.state_dir, "Cannot fit tray content", &error);
+        return false;
+    }
+    true
+}
+
+fn position_tray_menu(window: &WebviewWindow<Wry>, context: &Context) {
+    let positioned = window
+        .move_window_constrained(Position::TrayCenter)
+        .or_else(|_| window.move_window(Position::TrayBottomCenter))
+        .or_else(|_| window.move_window(Position::BottomRight));
+    if let Err(error) = positioned {
+        log_error(&context.state_dir, "Cannot position tray menu", &error);
+        return;
+    }
+    // Positioner's constraint uses the full monitor. Also respect the work area
+    // so a large-font fallback cannot overlap the taskbar or leave Quit offscreen.
+    if let (Ok(Some(monitor)), Ok(position), Ok(size)) = (
+        window.current_monitor(),
+        window.outer_position(),
+        window.outer_size(),
+    ) {
+        let area = monitor.work_area();
+        let left = i64::from(area.position.x);
+        let top = i64::from(area.position.y);
+        let right = (left + i64::from(area.size.width) - i64::from(size.width)).max(left);
+        let bottom = (top + i64::from(area.size.height) - i64::from(size.height)).max(top);
+        let x = i64::from(position.x).clamp(left, right) as i32;
+        let y = i64::from(position.y).clamp(top, bottom) as i32;
+        if x != position.x || y != position.y {
+            let _ = window.set_position(tauri::PhysicalPosition::new(x, y));
+        }
+    }
+}
+
 fn show_tray_menu(app: &AppHandle, context: &Context, window: &WebviewWindow<Wry>) {
+    if context.quitting.load(Ordering::SeqCst) {
+        return;
+    }
+    context.tray_open_requested.store(true, Ordering::SeqCst);
+    // Move the hidden window to the tray's monitor BEFORE converting its work
+    // area to logical pixels. Stored measurements survive subsequent openings.
+    position_tray_menu(window, context);
+    let measured = *lock(&context.tray_size);
+    if let Some(size) = measured {
+        if !resize_tray_menu(window, context, size) {
+            context.tray_open_requested.store(false, Ordering::SeqCst);
+            return;
+        }
+        position_tray_menu(window, context);
+    }
     // Read-only: opening the menu never opts the user into login startup.
     // Serialize with toggles so an older read cannot overwrite their result.
     {
@@ -640,18 +731,14 @@ fn show_tray_menu(app: &AppHandle, context: &Context, window: &WebviewWindow<Wry
         *status = autostart::status();
     }
     update_tray_state(app);
-    // TrayCenter keeps the popover above the icon (or below it if the taskbar
-    // is at the top); the constrained variant also keeps it on-screen.
-    let positioned = window
-        .move_window_constrained(Position::TrayCenter)
-        .or_else(|_| window.move_window(Position::TrayBottomCenter))
-        .or_else(|_| window.move_window(Position::BottomRight));
-    if let Err(error) = positioned {
-        log_error(
-            context.state_dir.as_ref(),
-            "Cannot position tray menu",
-            &error,
-        );
+    if measured.is_none() {
+        // No guessed fixed-height flash on the first opening. The Vue bridge
+        // measures even while this native window is hidden, then retries show.
+        let _ = window.eval("if (window.__measureTray) void window.__measureTray();");
+        return;
+    }
+    if !context.tray_open_requested.swap(false, Ordering::SeqCst) {
+        return;
     }
     let _ = window.show();
     let _ = window.set_focus();
@@ -659,6 +746,7 @@ fn show_tray_menu(app: &AppHandle, context: &Context, window: &WebviewWindow<Wry
 }
 
 fn hide_tray_menu(app: &AppHandle, context: &Context) {
+    context.tray_open_requested.store(false, Ordering::SeqCst);
     if let Some(window) = app.get_webview_window(TRAY_WINDOW) {
         let _ = window.hide();
     }
@@ -666,12 +754,35 @@ fn hide_tray_menu(app: &AppHandle, context: &Context) {
 }
 
 fn handle_tray_action(app: &AppHandle, context: &Context, action: &str) {
-    // Keep the login-startup switch open for verified state feedback.
-    let keep_open = action == "autostart-toggle";
+    // This route exists only on the bundled tray webview, never on Pi Web.
+    if action.starts_with("resize-") {
+        if let (Some(size), Some(window)) = (
+            tray_layout::Size::from_action(action),
+            app.get_webview_window(TRAY_WINDOW),
+        ) {
+            if resize_tray_menu(&window, context, size) {
+                *lock(&context.tray_size) = Some(size);
+                if context.tray_open_requested.load(Ordering::SeqCst) {
+                    show_tray_menu(app, context, &window);
+                } else if window.is_visible().unwrap_or(false) {
+                    position_tray_menu(&window, context);
+                }
+                // Limit-only feedback must not release a pending startup click.
+                let height = tray_available_size(&window).height;
+                let _ = window.eval(format!(
+                    "if (window.__setTrayState) window.__setTrayState({{maxHeight:{height}}});"
+                ));
+            }
+        }
+        return;
+    }
+    // State handshakes and the startup switch never dismiss the menu.
+    let keep_open = matches!(action, "autostart-toggle" | "ready");
     if !keep_open {
         hide_tray_menu(app, context);
     }
     match action {
+        "ready" => update_tray_state(app),
         "show" => show_app_window(app),
         "browser" => {
             let url = lock(&context.server).as_ref().map(|s| s.url.clone());

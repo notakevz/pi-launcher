@@ -47,7 +47,10 @@ jobs:
 
       - run: npm run check:version
       - run: npm run check:syntax
-      - run: npm run test:tools
+      - run: npm test
+      - run: npm run build:ui
+      - name: Verify tray layout in isolated Edge
+        run: npm run test:ui:layout
       - run: cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check
       - run: cargo test --manifest-path src-tauri/Cargo.toml --locked --target x86_64-pc-windows-msvc
       - run: cargo clippy --manifest-path src-tauri/Cargo.toml --locked --target x86_64-pc-windows-msvc --all-targets -- -D warnings

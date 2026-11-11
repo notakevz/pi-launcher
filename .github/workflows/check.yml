@@ -33,8 +33,11 @@ jobs:
       - run: npm ci
       - run: npm run check:version
       - run: npm run check:syntax
-      # Node built-ins only: release/backend tooling, not Tauri runtime tests.
-      - run: npm run test:tools
+      # Tool mocks and real Vue/PrimeVue component tests are separate from Rust.
+      - run: npm test
+      - run: npm run build:ui
+      - name: Verify tray layout in isolated Edge
+        run: npm run test:ui:layout
       # The application uses Win32 APIs; do not claim Linux runtime coverage.
       - run: cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check
       - run: cargo test --manifest-path src-tauri/Cargo.toml --locked --target x86_64-pc-windows-msvc

@@ -14,7 +14,7 @@ Electron browser local storage/profile 不保证迁移到 WebView2，不能承�
 ## 1. 源码与工具检查
 
 - [ ] 源码无个人配置、凭据、会话、日志、后端产物、浏览器 profile、缓存或真实用户路径。
-- [ ] `LICENSE`、图标署名、`THIRD_PARTY_NOTICES.md` 保留；Tauri bundle 携带主许可、第三方通知及 `LICENSE-TAURI-MIT`。
+- [ ] `LICENSE`、图标署名、`THIRD_PARTY_NOTICES.md` 保留；Tauri bundle 携带主许可、第三方通知、`LICENSE-TAURI-MIT` 和生成的 `THIRD_PARTY_FRONTEND_LICENSES.txt`。
 - [ ] package、npm lock 两个根版本、Cargo package/lock 中本包版本、Tauri 显式版本全部为目标版本；不要无故重写 Cargo.lock。
 - [ ] 原生 Windows 10/11 x64；Node >=22.19、npm、Git、Rust stable >=1.90、MSVC C++ Build Tools / Windows SDK、WebView2 Runtime。
 - [ ] 仓库/终端网络正确，不关闭 TLS，不提交本机 Cargo 镜像或代理认证。
@@ -24,12 +24,14 @@ npm ci
 npm run check:version
 npm run check:syntax
 npm test
+npm run build:ui
+npm run test:ui:layout
 cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check
 cargo test --manifest-path src-tauri/Cargo.toml --locked --target x86_64-pc-windows-msvc
 cargo clippy --manifest-path src-tauri/Cargo.toml --locked --target x86_64-pc-windows-msvc --all-targets -- -D warnings
 ```
 
-Node 测试是可移植 release/backend 工具检查，Rust 是 Windows 应用回归，两者不是安装/GUI 验收。
+Node 工具测试、Vue/jsdom 组件测试、隔离 Edge 布局测试、Windows Rust 回归分别提供各自层级的证据，都不等于实际 Tauri/安装验收。布局测试需要已安装 Microsoft Edge；独立 Cargo 检查前必须先构建 UI。
 不把 Linux Node 成功写成 Win32 Rust 成功。历史 Electron 正常使用反馈不能替代新 Tauri 验收。
 记录实际命令/退出码和未运行项，不虚报 CI 或安装器通过。
 
@@ -82,7 +84,7 @@ npm run stage:installer
 
 build 实际命令：`tauri build --ci --no-sign --bundles nsis -- --locked`，使用 Windows x64 原生 MSVC 工具链及 Tauri 默认输出目录。
 `--locked` 是传给 Cargo 的参数，不是 Tauri CLI 自身的选项。
-使用锁文件执行 Cargo release build，再生成 NSIS；不构建/捆绑外置 Pi Web，不隐式发布，不签名。
+Tauri `beforeBuildCommand` 先执行 `npm run build:ui`，Vite 编译两页并收集前端许可到 `.build/ui/`，然后使用锁文件执行 Cargo release build，再生成 NSIS；不构建/捆绑外置 Pi Web，不隐式发布，不签名。
 
 本地唯一交付目录使用 Tauri 默认的 `src-tauri/target/release/bundle/nsis/`：
 
@@ -106,7 +108,7 @@ build 实际命令：`tauri build --ci --no-sign --bundles nsis -- --locked`，�
 
 push/PR 执行 Windows Node 工具检查及 Rust fmt/test/clippy，Node 22 缓存 npm，Rust stable MSVC 与 Cargo cache。
 官方 Actions 已升级为 Node 24 运行时版本；这与项目使用的 Node 22 工具链相互独立。
-不构建安装器，不触发发布，不调用模型。工作流存在不代表检查已执行。
+检查同时编译 Vue 前端、运行真实组件及独立 Edge 布局测试；不构建安装器，不触发发布，不调用模型。工作流存在不代表检查已执行。
 
 ### 手动 Build Windows（默认仅附件）
 
@@ -115,7 +117,7 @@ push/PR 执行 Windows Node 工具检查及 Rust fmt/test/clippy，Node 22 缓�
 
 - build job 保持 `contents: read`，检出 `github.sha`，不跟随移动分支头，不持久化 checkout 凭据。
 - Windows runner、Node 22/npm cache、Rust stable >=1.90 MSVC、rustfmt/clippy/Cargo cache。
-- `npm ci`、版本/语法/Node 测试及 Windows Rust 检查后执行上述 locked NSIS build 与 staging。
+- `npm ci`、版本/语法/工具和组件测试、Vite 编译、独立 Edge 布局及 Windows Rust 检查后执行上述 locked NSIS build 与 staging。
 - 仅从 runner 临时发布目录上传 ASCII installer EXE 与 SHA256SUMS.txt 为 `pi-launcher-windows-x64`，保留 7 天；
   不上传整个 target、工作区、依赖、调试文件、后端或个人数据。
 - 不配置模型凭据、个人 PAT、代理秘密或签名证书。看到实际日志/附件后才能报告打包成功。

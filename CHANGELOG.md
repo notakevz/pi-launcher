@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Replace the handwritten tray controls with Vue 3, PrimeVue ToggleSwitch/Button/Divider and locally bundled Aura themes using Vite.
+- Measure intrinsic content and resize the native tray window in bounded logical pixels before its first display; respect monitor work areas, fit normal menus without scrollbars, and keep a scrolling fallback for exceptionally small screens or enlarged fonts.
+- Replay native state after Vue mounts. Keep verified startup state and click suppression, including Edge's canceled-checkbox default-action rollback race.
+- Reserve identical button borders across normal/hover/active states so pointer movement cannot add 2px to the menu or cause native height jumps.
+- Add real Vue component tests and isolated Edge layout/interaction tests for light/dark themes, fractional DPI, enlarged fonts and small work areas. Include frontend compilation before Rust checks in CI.
+- Bundle complete locked frontend dependency license notices. Generated UI, screenshots and browser test results remain ignored.
+
 ## 0.1.1 — Tray and documentation polish
 
 - Remove zoom controls from the tray menu; retain main-window keyboard zoom.

@@ -10,7 +10,10 @@
 | `src-tauri/src/` | Rust 应用：配置、Node/后端检查、健康探测、进程身份与所有权、窗口和托盘 |
 | `src-tauri/Cargo.toml` / `Cargo.lock` | Rust 包版本、最低 Rust 1.90 与锁定依赖 |
 | `src-tauri/tauri.conf.json` | Tauri 应用身份、版本、静态资源、安全与 NSIS 打包配置 |
-| `ui/` | 内嵌加载页、托盘静态资源；修改后必须重新编译 |
+| `ui/` | 加载页、Vue 3/PrimeVue 托盘与组件测试；Vite 编译到 `.build/ui/`，不加载 CDN |
+| `vite.config.mjs` / `vitest.config.mjs` | 多页前端构建、完整生产依赖许可收集、jsdom 真实组件测试 |
+| `playwright.config.mjs` / `tests/ui/` | 独立 Edge 布局/交互验证，不运行 Tauri 或真实注册表 |
+| `src-tauri/src/tray_layout.rs` | 严格尺寸信号解析、逻辑像素/DPI 与显示器工作区限幅 |
 | `src-tauri/src/autostart.rs` | 当前用户 Run 启动项读取、显式切换及 mock 回归；不开放远程 IPC |
 | `src-tauri/nsis/hooks.nsh` | 真正卸载时仅删除与本次安装 EXE 命令匹配的启动项，更新时保留 |
 | `src-tauri/nsis/installer.nsi` | 固定 CLI 2.12.4 模板，去掉默认无条件 Run 删除逻辑；升级 CLI 时审查模板差异及许可 |
@@ -38,35 +41,49 @@ npm ci
 npm run dev
 ```
 
-静态 `ui/` 在构建时嵌入，刷新窗口不替代重新编译。开发运行也会管理实际后端，
+`npm run dev` / 安装器构建会先由 Tauri hook 执行 `npm run build:ui`，将两页和前端许可输出到忽略的 `.build/ui/`，再由 Rust 嵌入；不新增本地安装包交付目录。单独运行 Cargo 检查前也须构建 UI。刷新窗口不替代重新编译。开发运行也会管理实际后端，
 先选择隔离配置与后端目录，避免抢占真实客户端端口/进程记录。
 
-## 两层自动检查
+## 自动检查与证据边界
 
 ### 1. Node release/backend tools（可移植）
 
 ```powershell
 npm run check:version
 npm run check:syntax
-npm test
+npm run test:tools
 ```
 
-`npm test` 等于 `npm run test:tools`，只运行：
+`npm run test:tools` 只运行：
 
 - `scripts/test-release-unit.js`：mock GitHub API、分页/草稿/标签冲突、失败保留、白名单、symlink、校验与迁移文案。
 - `scripts/test-backend-tools.js`：repository 规范化、清单哈希/安全路径、构建环境、交付跨盘/竞争/失败保留。
 - `scripts/test-version-unit.js`：所有版本一致与缺失/错配拒绝，不修改锁文件。
 - `scripts/test-stage-unit.js`：本地原地校验、CI 临时附件命名/哈希、拒绝多产物或覆盖已有 CI 暂存目录。
-- `scripts/test-tray-unit.js`：fake DOM 状态与 ARIA、未知/错误提示、自启请求防双击；不访问真实启动项。
+旧 `scripts/test-tray-unit.js` fake DOM 测试已移除，改为下述真实组件与浏览器检查。
 
 这些检查不启动真实 Pi Web、不下载 Electron、不调用模型，也不是应用配置或 Win32 行为回归。
 符号链接测试在缺少 Windows symlink 权限时可明确 skip；不要把 skip 计为已验证。
 
-### 2. Rust Windows 应用检查
+### 2. Vue/PrimeVue 与实际浏览器布局
+
+```powershell
+npm run build:ui
+npm run test:ui
+npm run test:ui:layout
+```
+
+`npm test` 组合工具检查与 Vitest/jsdom 组件检查。组件测试挂载真实 PrimeVue 控件，验证原生状态回放、默认不登记自启、未知/错误提示、防双击及尺寸测量。
+布局测试使用本机安装的 Microsoft Edge（Playwright `msedge`），新建隔离浏览器上下文，只打开本地构建页并模拟 native 信号；不连接 Pi Web、不读写 Run、不复用浏览器 profile。覆盖明暗主题、125%/150% DPR、双倍字号、小工作区、无正常滚动条及底部留白、悬停/焦点不改变尺寸、真实点击/Space/Esc 和 CSP。结果与预览图在 `.build/playwright/`。
+
+浏览器测试不等于真实托盘定位、Windows 登录、安装/卸载验收；未运行时不能将组件测试当作布局证据。
+
+### 3. Rust Windows 应用检查
 
 在原生 Windows 工具链执行：
 
 ```powershell
+npm run build:ui
 cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check
 cargo test --manifest-path src-tauri/Cargo.toml --locked --target x86_64-pc-windows-msvc
 cargo clippy --manifest-path src-tauri/Cargo.toml --locked --target x86_64-pc-windows-msvc --all-targets -- -D warnings
@@ -98,7 +115,7 @@ Next 构建与测试使用隔离 Pi 数据/构建 profile，不碰真实凭据/�
 
 ## 安全、数据与诊断
 
-- Rust 管理配置、进程与窗口；加载页/托盘不应暴露 Tauri IPC 给远程 Pi Web。
+- Rust 管理配置、进程与窗口；加载页/托盘不应暴露 Tauri IPC 给远程 Pi Web。Vue 通过受限 `window.open` 信号握手和上报尺寸，尺寸只在本地 tray webview 处理，并限制范围；不开启远程 IPC 或开发服务器来源。
   `withGlobalTauri` 关闭、capabilities 保持最小；远程页面 CSP 由后端响应决定。
 - `%APPDATA%\Pi Launcher`（或 `PI_LAUNCHER_DATA_DIR`）保留配置、日志、进程记录；
   `%LOCALAPPDATA%\Pi Launcher\webview2` 是独立 WebView2 profile，不能共用 Electron profile。

@@ -148,7 +148,7 @@ Get-Content -LiteralPath $file
 
 ## 开发者
 
-改启动器本身：在 `pi-launcher` 目录 `npm ci`，然后 `npm start`（等于 `tauri dev`）。第一次要编译 Rust，需要 Rust stable 1.90 以上（MSVC 工具链）、Visual Studio 2022 Build Tools 的“使用 C++ 的桌面开发”和 Windows SDK。打包发布见 [docs/releasing.md](docs/releasing.md)，测试和日志解读见 [docs/ai-maintenance.md](docs/ai-maintenance.md)。
+改启动器本身：在 `pi-launcher` 目录 `npm ci`，然后 `npm start`（等于 `tauri dev`，会先用 Vite 编译本地 Vue 3/PrimeVue 托盘界面）。第一次要编译 Rust，需要 Rust stable 1.90 以上（MSVC 工具链）、Visual Studio 2022 Build Tools 的“使用 C++ 的桌面开发”和 Windows SDK。打包发布见 [docs/releasing.md](docs/releasing.md)，测试和日志解读见 [docs/ai-maintenance.md](docs/ai-maintenance.md)。
 
 ## 相关项目与许可
 

@@ -4,13 +4,15 @@
   "version": "0.1.1",
   "identifier": "local.pi.launcher",
   "build": {
-    "frontendDist": "../ui"
+    "beforeDevCommand": { "script": "npm run build:ui", "wait": true },
+    "beforeBuildCommand": "npm run build:ui",
+    "frontendDist": "../.build/ui"
   },
   "app": {
     "windows": [],
     "withGlobalTauri": false,
     "security": {
-      "csp": "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; script-src 'self'; connect-src ipc: http://ipc.localhost; base-uri 'none'; form-action 'none'"
+      "csp": "default-src 'none'; img-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src ipc: http://ipc.localhost; base-uri 'none'; form-action 'none'"
     }
   },
   "bundle": {
@@ -20,7 +22,8 @@
     "resources": {
       "../LICENSE": "LICENSE",
       "../THIRD_PARTY_NOTICES.md": "THIRD_PARTY_NOTICES.md",
-      "nsis/LICENSE-TAURI-MIT": "LICENSE-TAURI-MIT"
+      "nsis/LICENSE-TAURI-MIT": "LICENSE-TAURI-MIT",
+      "../.build/ui/THIRD_PARTY_FRONTEND_LICENSES.txt": "THIRD_PARTY_FRONTEND_LICENSES.txt"
     },
     "icon": ["icons/icon.ico", "icons/icon.png"],
     "publisher": "Pi Launcher",

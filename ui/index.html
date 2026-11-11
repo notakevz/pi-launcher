@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; script-src 'self'; connect-src ipc: http://ipc.localhost; base-uri 'none'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src ipc: http://ipc.localhost; base-uri 'none'; form-action 'none'">
   <meta name="color-scheme" content="light dark">
   <title>Pi Launcher</title>
   <style>
@@ -162,12 +162,12 @@
   <div class="ambient" aria-hidden="true"></div>
   <main class="shell">
     <header class="brand">
-      <img src="icon.svg" alt="">
+      <img src="./icon.svg?no-inline" alt="">
       <span class="brand-name">Pi Launcher</span>
       <span class="brand-tag">YOUR LOCAL WORKSPACE</span>
     </header>
     <section class="card" aria-labelledby="heading" aria-busy="true">
-      <div class="symbol" aria-hidden="true"><img src="icon.svg" alt=""></div>
+      <div class="symbol" aria-hidden="true"><img src="./icon.svg?no-inline" alt=""></div>
       <h1 id="heading">正在准备工作空间</h1>
       <p class="subtitle">一切就绪后，将自动为你打开。</p>
       <div class="status" id="status-bar" role="status" aria-live="polite" aria-atomic="true">
